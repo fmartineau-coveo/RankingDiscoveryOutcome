@@ -127,7 +127,7 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
   return (
     <aside className="sticky top-20 mr-6 hidden h-[calc(100vh-5.5rem)] w-64 shrink-0 overflow-y-auto rounded-2xl border border-ink-200 bg-white p-2 shadow-soft xl:block">
       <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-ink-500">
-        17 concepts
+        18 concepts
       </div>
       <ol className="space-y-0.5">
         {concepts.map((c) => (

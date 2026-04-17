@@ -1,5 +1,5 @@
 /**
- * Registry of the 17 concept directions. The detail view reads from this to
+ * Registry of the 18 concept directions. The detail view reads from this to
  * render metadata consistently and to wire up each concept's React component.
  */
 
@@ -22,6 +22,7 @@ import RankStoryline from '@/components/concepts/14-RankStoryline'
 import CommercialIntentCheck from '@/components/concepts/15-BirdsEyeLens'
 import FactorImpactMap from '@/components/concepts/16-FactorImpactMap'
 import ScorecardV2 from '@/components/concepts/17-ScorecardV2'
+import ScorecardV3 from '@/components/concepts/18-ScorecardV3'
 
 export type Approach = 'ris' | 'pairwise' | 'both'
 export type Posture = 'enterprise' | 'bold'
@@ -298,6 +299,21 @@ export const concepts: ConceptMeta[] = [
       'V2 is a response to feedback on concept 01, not a replacement. Both are kept in the showcase so the deltas are inspectable. The underlying method (single-factor rank counterfactuals) is identical — only the surfacing changed.',
     group: 'approach-1',
     Component: ScorecardV2,
+  },
+  {
+    id: 'scorecard-v3',
+    number: 18,
+    title: 'Ranking Impact Scorecard · Version 3',
+    tagline: 'Model factor forces and concrete merchandising rules, side by side on the same card.',
+    approach: 'ris',
+    posture: 'enterprise',
+    question: 'Why is this product ranked where it is — from the model AND from my rules?',
+    description:
+      'A single-product card that tells the full story behind a served rank. For each of the four model factors, one plain-language sentence says whether it is lifting this product, lifting its competitors on this page, or not meaningfully shaping the outcome here. Underneath, every merchandising rule currently affecting the product is named in full — scope, rationale, and effect on rank — so the merchandiser sees their own intent at play alongside the model\'s. Read together and separately, it lets them interpret a rank as a specific, legible combination of forces and decide whether to trust it, tune a rule, or layer more intent on top.',
+    notClaimed:
+      'Rule effects are described qualitatively — we do not claim an exact rule-only counterfactual rank. For pin rules, the pinned target position is stated verbatim because that is what the rule explicitly does; for boost/demote rules, the effect is directional. Rule copy is synthetic for this prototype.',
+    group: 'approach-1',
+    Component: ScorecardV3,
   },
 ]
 

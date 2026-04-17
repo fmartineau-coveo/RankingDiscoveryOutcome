@@ -30,7 +30,7 @@ export function GalleryPage() {
           Gallery
         </div>
         <div className="flex items-end justify-between gap-4">
-          <h1 className="display text-5xl text-ink-950">17 concept directions.</h1>
+          <h1 className="display text-5xl text-ink-950">18 concept directions.</h1>
           <div className="hidden text-xs text-ink-500 md:block">
             Showing {filtered.length} of {concepts.length}
           </div>

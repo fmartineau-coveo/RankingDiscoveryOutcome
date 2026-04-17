@@ -416,6 +416,57 @@ function Preview({ id }: { id: string }) {
           </div>
         </div>
       )
+    case 'scorecard-v3':
+      return (
+        <div className={cx(common, 'bg-gradient-to-br from-blue-50 to-purple-50')}>
+          <div className="absolute inset-3 flex flex-col gap-2 rounded-xl border border-ink-200 bg-white p-3 shadow-soft">
+            {/* Model factor block */}
+            <div className="rounded-md border border-blue-200 bg-blue-50/40 p-1.5">
+              <div className="text-[8px] font-semibold uppercase tracking-[0.1em] text-blue-700">
+                Model factors
+              </div>
+              <div className="mt-1 space-y-1">
+                {[0.75, 0.5, -0.3].map((r, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span
+                      className={cx(
+                        'h-2 w-4 rounded-full',
+                        r >= 0 ? 'bg-blue-500' : 'bg-purple-500',
+                      )}
+                    />
+                    <span className="h-1 flex-1 rounded-full bg-ink-200" style={{ maxWidth: `${70 - i * 10}%` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Rules block */}
+            <div className="rounded-md border border-purple-200 bg-purple-50/40 p-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[8px] font-semibold uppercase tracking-[0.1em] text-purple-700">
+                  Merch rules
+                </span>
+                <span className="rounded-full bg-white px-1 text-[7px] font-semibold text-ink-500 shadow-soft">
+                  2 applied
+                </span>
+              </div>
+              <div className="mt-1 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="grid h-2.5 w-2.5 place-items-center rounded-sm bg-teal-500 text-[6px] font-bold text-white">
+                    +
+                  </span>
+                  <span className="h-1 w-16 rounded-full bg-ink-200" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="grid h-2.5 w-2.5 place-items-center rounded-sm bg-amber-500 text-[6px] font-bold text-white">
+                    −
+                  </span>
+                  <span className="h-1 w-10 rounded-full bg-ink-200" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
     case 'scorecard-v2':
       return (
         <div className={cx(common, 'bg-gradient-to-br from-blue-50 to-purple-50')}>

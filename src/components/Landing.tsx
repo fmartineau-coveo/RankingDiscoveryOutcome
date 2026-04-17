@@ -15,9 +15,9 @@ export function Landing() {
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-purple-600">
               Gallery
             </div>
-            <h2 className="display text-4xl text-ink-900">17 concept directions</h2>
+            <h2 className="display text-4xl text-ink-900">18 concept directions</h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600">
-              Nine grounded / enterprise-ready patterns and eight bold / visionary ones. Every
+              Ten grounded / enterprise-ready patterns and eight bold / visionary ones. Every
               concept is grounded in one of the two approved explainability approaches and uses the
               same sofas PLP so they can be compared side-by-side.
             </p>
@@ -53,7 +53,7 @@ function Hero() {
         <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-ink-700">
           Coveo's discovery converged on two counterfactual-based approaches for explaining
           ranking-model outcomes: a per-product <strong>Ranking Impact Score</strong> and an
-          LLM-powered <strong>Pairwise Narrative</strong>. This showcase presents 17 ways those
+          LLM-powered <strong>Pairwise Narrative</strong>. This showcase presents 18 ways those
           approaches could surface to merchandisers — from the conservative to the visionary — so
           we can react, compare, and align before any line of production code is written.
         </p>
@@ -62,7 +62,7 @@ function Hero() {
             to="/gallery"
             className="group inline-flex items-center gap-2 rounded-lg bg-ink-900 px-4 py-2.5 text-sm font-medium text-white shadow-lift hover:bg-ink-800"
           >
-            Explore the 17 concepts
+            Explore the 18 concepts
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
           <Link
@@ -86,8 +86,8 @@ function Hero() {
           />
           <HeroStat
             label="Concept directions"
-            value="17"
-            sub="9 enterprise · 8 bold"
+            value="18"
+            sub="10 enterprise · 8 bold"
           />
         </div>
       </div>
