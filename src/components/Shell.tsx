@@ -1,21 +1,50 @@
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Sparkles, ArrowUpRight, Pin } from 'lucide-react'
-import { concepts } from '@/data/concepts'
+import { concepts, conceptById } from '@/data/concepts'
 import { cx } from '@/lib/utils'
 import { useAppState } from '@/lib/appState'
+import { COMMENT_ROOT_ATTR } from '@/lib/comments'
+import { CommentsToolbar } from '@/components/comments/CommentsPanel'
+import { CommentsLayer } from '@/components/comments/CommentsLayer'
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const loc = useLocation()
   const isDetail = loc.pathname.startsWith('/concepts/')
+  const pageLabel = labelForPath(loc.pathname)
   return (
     <div className="min-h-screen bg-ink-50 text-ink-900">
       <TopBar />
       <div className="mx-auto flex max-w-[1440px] gap-0 px-6 pb-24 pt-6">
         <Sidebar collapsed={!isDetail} />
-        <main className="min-w-0 flex-1">{children}</main>
+        {/*
+          The <main> element is the comment-anchor root. All overlay pins are
+          positioned absolutely inside it so they scroll with content and
+          resize with the layout.
+        */}
+        <main
+          {...{ [COMMENT_ROOT_ATTR]: '' }}
+          className="relative min-w-0 flex-1"
+        >
+          {children}
+          <CommentsLayer pageLabel={pageLabel} />
+        </main>
       </div>
     </div>
   )
+}
+
+function labelForPath(pathname: string): string {
+  if (pathname === '/') return 'Overview'
+  if (pathname === '/principles') return 'Principles'
+  if (pathname === '/gallery') return 'Gallery'
+  if (pathname === '/pinned') return 'Pinned'
+  if (pathname.startsWith('/concepts/')) {
+    const id = pathname.split('/').pop() ?? ''
+    const c = conceptById(id)
+    if (c) return `Concept ${String(c.number).padStart(2, '0')} · ${c.title}`
+    return 'Concept'
+  }
+  return pathname
 }
 
 function TopBar() {
@@ -38,9 +67,7 @@ function TopBar() {
           <PinnedLink />
         </nav>
         <div className="flex items-center gap-3">
-          <span className="hidden text-[11px] text-ink-500 md:inline">
-            16 concepts · 2 approved approaches
-          </span>
+          <CommentsToolbar />
           <a
             href="https://coveo.com"
             target="_blank"
@@ -100,7 +127,7 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
   return (
     <aside className="sticky top-20 mr-6 hidden h-[calc(100vh-5.5rem)] w-64 shrink-0 overflow-y-auto rounded-2xl border border-ink-200 bg-white p-2 shadow-soft xl:block">
       <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-ink-500">
-        16 concepts
+        17 concepts
       </div>
       <ol className="space-y-0.5">
         {concepts.map((c) => (

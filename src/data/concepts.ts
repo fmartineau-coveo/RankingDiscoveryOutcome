@@ -1,5 +1,5 @@
 /**
- * Registry of the 16 concept directions. The detail view reads from this to
+ * Registry of the 17 concept directions. The detail view reads from this to
  * render metadata consistently and to wire up each concept's React component.
  */
 
@@ -21,6 +21,7 @@ import AmbientPlpOverlay from '@/components/concepts/13-AmbientPlpOverlay'
 import RankStoryline from '@/components/concepts/14-RankStoryline'
 import CommercialIntentCheck from '@/components/concepts/15-BirdsEyeLens'
 import FactorImpactMap from '@/components/concepts/16-FactorImpactMap'
+import ScorecardV2 from '@/components/concepts/17-ScorecardV2'
 
 export type Approach = 'ris' | 'pairwise' | 'both'
 export type Posture = 'enterprise' | 'bold'
@@ -282,6 +283,21 @@ export const concepts: ConceptMeta[] = [
       'The Y-axis is per-product rank impact, the X-axis is a page-local spread measure. Neither is a universal property of the factor. The map is diagnostic, not a ranking simulator.',
     group: 'hybrid',
     Component: FactorImpactMap,
+  },
+  {
+    id: 'scorecard-v2',
+    number: 17,
+    title: 'Ranking Impact Scorecard · Version 2',
+    tagline: 'An iteration of concept 01 shaped by stakeholder comments — softer labels, no bars, explicit validity.',
+    approach: 'ris',
+    posture: 'enterprise',
+    question: 'Why is this product ranked where it is — and how long is this answer valid for?',
+    description:
+      'A revision of the canonical Scorecard (concept 01) that carries forward four specific stakeholder notes: the "drag / hurting" vocabulary is replaced with symmetric "lifts this product / lifts competitors" phrasing; the RIS bars are removed in favour of a single-sentence verdict plus the "without [factor] …" counterfactual; the "valid until next training" disclosure is promoted from a footer to a prominent Validity band treated as a hard UI commitment; and the original competitive-position framing is preserved. Shown alongside concept 01 so stakeholders can compare the before and the after.',
+    notClaimed:
+      'V2 is a response to feedback on concept 01, not a replacement. Both are kept in the showcase so the deltas are inspectable. The underlying method (single-factor rank counterfactuals) is identical — only the surfacing changed.',
+    group: 'approach-1',
+    Component: ScorecardV2,
   },
 ]
 

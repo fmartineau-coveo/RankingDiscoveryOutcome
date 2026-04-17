@@ -107,7 +107,7 @@ function EmptyState() {
       </div>
       <h3 className="display mt-4 text-2xl text-ink-900">Nothing pinned yet.</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-600">
-        Open any of the 16 concepts and use <span className="inline-flex items-center gap-1 align-middle font-medium text-ink-800"><Pin className="h-3 w-3" /> Pin view</span> in the top-right to add it to your shortlist. Pins remember the specific product, pair, or scenario you were looking at.
+        Open any of the 17 concepts and use <span className="inline-flex items-center gap-1 align-middle font-medium text-ink-800"><Pin className="h-3 w-3" /> Pin view</span> in the top-right to add it to your shortlist. Pins remember the specific product, pair, or scenario you were looking at.
       </p>
       <div className="mt-5">
         <Link

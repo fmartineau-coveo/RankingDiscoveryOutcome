@@ -416,6 +416,48 @@ function Preview({ id }: { id: string }) {
           </div>
         </div>
       )
+    case 'scorecard-v2':
+      return (
+        <div className={cx(common, 'bg-gradient-to-br from-blue-50 to-purple-50')}>
+          <div className="absolute inset-4 rounded-xl border border-ink-200 bg-white p-3 shadow-soft">
+            {/* Validity band — the V2 signature move */}
+            <div className="flex items-center gap-2 rounded-md border border-purple-200 bg-gradient-to-r from-purple-50 via-blue-50 to-white px-2 py-1">
+              <span className="grid h-4 w-4 place-items-center rounded bg-white text-purple-600">
+                <span className="block h-1.5 w-1.5 rounded-sm bg-purple-500" />
+              </span>
+              <span className="flex-1 text-[8.5px] font-semibold uppercase tracking-[0.1em] text-purple-700">
+                Snapshot · Apr 12
+              </span>
+              <span className="rounded-full bg-white px-1 text-[7.5px] font-semibold text-ink-500 shadow-soft">
+                Refreshes on training
+              </span>
+            </div>
+            {/* Text-forward factor rows — no bars, per comment #2 */}
+            <div className="mt-2 space-y-1.5">
+              {[
+                { tone: 'blue', w: '82%' },
+                { tone: 'purple', w: '64%' },
+                { tone: 'blue', w: '48%' },
+                { tone: 'ink', w: '36%' },
+              ].map((row, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <span
+                    className={cx(
+                      'h-2.5 w-6 rounded-full',
+                      row.tone === 'blue'
+                        ? 'bg-blue-500'
+                        : row.tone === 'purple'
+                          ? 'bg-purple-500'
+                          : 'bg-ink-200',
+                    )}
+                  />
+                  <span className="h-1.5 rounded-full bg-ink-200" style={{ width: row.w }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
     default:
       return <div className={common} />
   }
