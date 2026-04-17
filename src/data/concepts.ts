@@ -201,9 +201,9 @@ export const concepts: ConceptMeta[] = [
     posture: 'bold',
     question: 'Why is X ranked above Y — and what would change that?',
     description:
-      'The merchandiser types a question, the system returns a pairwise narrative tightly grounded in this PLP\'s rank counterfactuals. Follow-ups stay in context ("What if Trendiness were removed?"). No scores, no signals — only ranks, factors, and competitive position.',
+      'The merchandiser types a natural question — "why is X above Y?", "why is X ranked where it is?" — and the system returns a short narrative in their own vocabulary. No scores, no signals, no hypotheticals; only ranks, factors, and competitive position, shaped by the same system prompt as the Head-to-Head narrative.',
     notClaimed:
-      'Answers are bound to the pre-computed rank counterfactuals for these products on this page. They are not a live simulation of the model.',
+      'Answers are bound to the pre-computed rank data for these products on this page. They are not a live simulation of the model, and the assistant will not answer questions that require one.',
     group: 'approach-2',
     Component: ConversationalQA,
   },

@@ -13,10 +13,17 @@ import { cx } from '@/lib/utils'
 type Turn = { role: 'user' | 'assistant'; content: React.ReactNode }
 
 /**
- * Supports three intents, all grounded in pre-computed data:
- *  - Pairwise: "Why is X above Y?"
- *  - Product: "Why is X ranked where it is?" (uses RIS + narrativeForProduct)
- *  - What-if: "What if <Factor> were removed for X?"
+ * Two question intents, both answered in the merchandiser's vocabulary —
+ * never in the system prompt's internal methodology vocabulary (no "what if
+ * we removed", no "counterfactual", no reference to ablation):
+ *
+ *  - Pairwise:  "Why is X above Y?"   → narrativeForPair (discovery voice)
+ *  - Product:   "Why is X at rank N?" → narrativeForProduct
+ *
+ * Questions phrased as counterfactual probes ("what if Trendiness were
+ * removed…") fall through to the fallback. The suggested prompts never
+ * expose that phrasing; if the merchandiser types one anyway, the answer
+ * gently reframes them in natural language.
  */
 function answer(q: string): React.ReactNode {
   const lower = q.toLowerCase()
@@ -34,32 +41,6 @@ function answer(q: string): React.ReactNode {
             {p}
           </p>
         ))}
-      </>
-    )
-  }
-
-  // -------- What-if / ablation on a single product
-  const whatIf = parseWhatIf(q)
-  if (whatIf) {
-    const { product, factor } = whatIf
-    const e = product.factors[factor]
-    const delta = e.rankWithout - e.rankWith
-    const verdict =
-      delta > 0
-        ? `${factor} is currently helping ${product.name}. Without it, the product would drop from rank ${e.rankWith} to rank ${e.rankWithout}.`
-        : delta < 0
-          ? `${factor} is actually giving competitors a bigger lift than it gives ${product.name}. Without it, the product would move up from rank ${e.rankWith} to rank ${e.rankWithout}.`
-          : `${factor} has no meaningful effect on ${product.name} — removing it would keep it at rank ${e.rankWith}.`
-    return (
-      <>
-        <p className="font-medium text-ink-900">
-          Without {factor}, {product.name} {delta === 0 ? 'would not move' : delta > 0 ? `would drop to rank ${e.rankWithout}` : `would move up to rank ${e.rankWithout}`}.
-        </p>
-        <p className="mt-2">{verdict}</p>
-        <p className="mt-2 text-ink-600">
-          Remember this is a single-factor counterfactual — removing two factors together is not
-          the sum of removing each.
-        </p>
       </>
     )
   }
@@ -90,19 +71,18 @@ function answer(q: string): React.ReactNode {
     )
   }
 
-  // -------- Fallback
+  // -------- Fallback — steer toward natural questions, no ablation vocabulary
   return (
     <p>
-      I can answer two kinds of questions grounded in this PLP's rank data: <em>"Why is X ranked
-      here?"</em> (product-level) and <em>"Why is X above Y?"</em> (pairwise). I also handle
-      what-if questions like <em>"What if Freshness were removed for Copenhagen Linen?"</em>.
+      I can answer two kinds of questions on the Sofas PLP: <em>"Why is X ranked where it is?"</em>{' '}
+      (product-level) and <em>"Why is X ranked above Y?"</em> (comparing two products). Try one of
+      those and I'll tell the story.
     </p>
   )
 }
 
 function parsePair(q: string): [ReturnType<typeof productById>, ReturnType<typeof productById>] | null {
   const lower = q.toLowerCase()
-  // look for "above" or "vs" / "versus" keywords
   if (!(lower.includes('above') || lower.includes(' vs') || lower.includes('versus') || lower.includes('compared'))) return null
   const matches: ReturnType<typeof productById>[] = []
   for (const p of products) {
@@ -114,20 +94,9 @@ function parsePair(q: string): [ReturnType<typeof productById>, ReturnType<typeo
   return [matches[0], matches[1]]
 }
 
-function parseWhatIf(q: string): { product: ReturnType<typeof productById>; factor: 'Popularity' | 'Freshness' | 'Trendiness' | 'Engagement' } | null {
-  const lower = q.toLowerCase()
-  if (!(lower.includes('what if') || lower.includes('without') || lower.includes('if we removed'))) return null
-  const factor = ['popularity', 'freshness', 'trendiness', 'engagement'].find((f) => lower.includes(f)) as string | undefined
-  if (!factor) return null
-  const product = parseProductRef(q)
-  if (!product) return null
-  const capF = (factor[0].toUpperCase() + factor.slice(1)) as 'Popularity' | 'Freshness' | 'Trendiness' | 'Engagement'
-  return { product, factor: capF }
-}
-
 function parseProductRef(q: string): ReturnType<typeof productById> | null {
   const lower = q.toLowerCase()
-  // prioritise the longest matching name to avoid "Velvet" matching "Velvet Cloud" vs "Emerald Velvet"
+  // Longest-match first so "Velvet" inside "Emerald Velvet Divan" doesn't collide with Velvet Cloud.
   const ranked = [...products].sort((a, b) => b.name.length - a.name.length)
   for (const p of ranked) {
     if (lower.includes(p.name.toLowerCase())) return p
@@ -141,9 +110,9 @@ function parseProductRef(q: string): ReturnType<typeof productById> | null {
 const SUGGESTED = [
   'Why is Velvet Cloud Sofa ranked above Leather Power Recliner?',
   'Why is Copenhagen Linen at rank 4?',
-  'What if Trendiness were removed for Velvet Cloud Sofa?',
-  "Why is Nordic Loft 3-Seater at the top?",
-  "Why is Harbor Lounge at rank 12?",
+  'Why is Nordic Loft 3-Seater at the top?',
+  'Why is Harbor Lounge sitting at rank 12?',
+  'Why is Emerald Velvet Divan ranked below Leather Power Recliner?',
 ]
 
 export default function ConversationalQA() {
@@ -153,21 +122,15 @@ export default function ConversationalQA() {
       content: (
         <>
           <p className="font-medium text-ink-900">
-            Ask me about any product or pair on the Sofas PLP.
+            Ask me about any product on the Sofas PLP.
           </p>
-          <p className="mt-2">
-            I answer three kinds of questions, all grounded in this PLP's pre-computed rank
-            counterfactuals (what each product's rank would be if a given factor were removed):
-          </p>
+          <p className="mt-2">I answer two kinds of questions:</p>
           <ul className="ml-4 mt-1 list-disc space-y-0.5 text-[13px]">
             <li>
-              <em>Why is a product ranked where it is?</em> (product-level)
+              <em>Why is a product ranked where it is?</em>
             </li>
             <li>
-              <em>Why is product X above product Y?</em> (pairwise)
-            </li>
-            <li>
-              <em>What if a factor were removed for product X?</em> (single-factor counterfactual)
+              <em>Why is product X ranked above product Y?</em>
             </li>
           </ul>
         </>
@@ -191,7 +154,7 @@ export default function ConversationalQA() {
             </div>
             Ranking explainer · Sofas PLP
           </div>
-          <span className="tag">Grounded in RIS + pairwise counterfactuals</span>
+          <span className="tag">Apr 2026 snapshot</span>
         </div>
         <div className="max-h-[560px] space-y-4 overflow-y-auto p-5 scroll-slim">
           {turns.map((t, i) => (
@@ -222,11 +185,14 @@ export default function ConversationalQA() {
         </form>
       </div>
 
-      <aside className="space-y-3">
+      <aside>
         <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-soft">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-ink-500">
-            <Wand2 className="h-3.5 w-3.5 text-purple-600" /> Suggested prompts
+            <Wand2 className="h-3.5 w-3.5 text-purple-600" /> Suggested questions
           </div>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-ink-500">
+            Questions a merchandiser typically asks when triaging a PLP. Click one to try it.
+          </p>
           <div className="mt-3 space-y-2">
             {SUGGESTED.map((s) => (
               <button
@@ -237,19 +203,6 @@ export default function ConversationalQA() {
                 {s}
               </button>
             ))}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-ink-200 bg-ink-900 p-5 text-ink-100">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">
-            Context the LLM has
-          </div>
-          <ul className="mt-3 space-y-2 text-[12px] leading-relaxed text-white/80">
-            <li>· Each product's rank with and without each of the 4 factors</li>
-            <li>· The mental model: think in ranks, competitive position, weighted impact</li>
-            <li>· Tone rules: 3–5 sentences, no hedging, no jargon, no model internals</li>
-          </ul>
-          <div className="mt-4 text-[10px] uppercase tracking-wider text-white/40">
-            {products.length} products · {products.length * 4} rank counterfactuals in scope
           </div>
         </div>
       </aside>

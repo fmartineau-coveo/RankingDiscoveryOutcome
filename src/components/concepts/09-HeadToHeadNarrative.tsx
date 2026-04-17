@@ -20,11 +20,6 @@ export default function HeadToHeadNarrative() {
     <div className="space-y-6">
       <PairPicker pair={pair} setPair={setPair} />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <ProductCard product={A} tone="blue" label="A" />
-        <ProductCard product={B} tone="purple" label="B" />
-      </div>
-
       <article className="relative overflow-hidden rounded-2xl border border-ink-900 bg-ink-950 p-7 text-white shadow-lift">
         <div className="absolute right-6 top-6 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">
           <Sparkles className="h-3 w-3" /> Pairwise narrative
@@ -232,38 +227,6 @@ function TryAnotherPair({
         })}
       </div>
     </section>
-  )
-}
-
-function ProductCard({ product, tone, label }: { product: ReturnType<typeof productById>; tone: 'blue' | 'purple'; label: string }) {
-  return (
-    <div
-      className={
-        'rounded-2xl border p-5 shadow-soft ' +
-        (tone === 'blue' ? 'border-blue-200 bg-blue-50/30' : 'border-purple-200 bg-purple-50/30')
-      }
-    >
-      <div className="flex items-start gap-4">
-        <ProductThumb product={product} size="md" />
-        <div className="flex-1">
-          <div
-            className={
-              'text-[11px] font-semibold uppercase tracking-[0.14em] ' +
-              (tone === 'blue' ? 'text-blue-700' : 'text-purple-700')
-            }
-          >
-            Product {label}
-          </div>
-          <h3 className="mt-0.5 text-lg font-semibold text-ink-900">{product.name}</h3>
-          <div className="text-[12px] text-ink-600">{product.priceLabel}</div>
-        </div>
-        <RankBadge
-          rank={product.factors.Popularity.rankWith}
-          tone={tone}
-          size="md"
-        />
-      </div>
-    </div>
   )
 }
 
