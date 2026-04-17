@@ -5,7 +5,7 @@ import { RankBadge } from '@/components/primitives/RankBadge'
 import { FactorChip } from '@/components/primitives/FactorChip'
 import { RisBar } from '@/components/primitives/RisBar'
 import { useConceptState } from '@/lib/conceptState'
-import { Quote, Sparkles, ArrowLeftRight } from 'lucide-react'
+import { Quote, Sparkles, ChevronDown } from 'lucide-react'
 import { cx } from '@/lib/utils'
 
 export default function HeadToHeadNarrative() {
@@ -45,6 +45,8 @@ export default function HeadToHeadNarrative() {
         </div>
       </article>
 
+      <TryAnotherPair pair={pair} setPair={setPair} />
+
       <div className="rounded-2xl border border-ink-200 bg-white p-6 shadow-soft">
         <div className="flex items-center justify-between">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">
@@ -76,6 +78,12 @@ export default function HeadToHeadNarrative() {
   )
 }
 
+/**
+ * Pair picker — product selectors are the primary UI, curated pairs moved to
+ * a secondary "try another pair" row below the narrative. Matches the system
+ * prompt's discipline: no internal scenario-library names in any user-facing
+ * copy.
+ */
 function PairPicker({
   pair,
   setPair,
@@ -83,30 +91,125 @@ function PairPicker({
   pair: [string, string]
   setPair: (p: [string, string]) => void
 }) {
+  const A = productById(pair[0])
+  const B = productById(pair[1])
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-soft">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">
-            Pick a pair to compare
-          </div>
-          <p className="mt-1 max-w-2xl text-[12px] text-ink-600">
-            The narrative and underlying rank numbers below update from whatever pair you select.
-            Each curated pair demonstrates a different scenario from the discovery's scenario
-            library — a critical swap, an asymmetric impact, a convergence, a deep-list pair, etc.
-          </p>
-        </div>
-        <button
-          onClick={() => setPair([pair[1], pair[0]])}
-          className="inline-flex items-center gap-1.5 rounded-md border border-ink-200 bg-white px-2.5 py-1.5 text-xs text-ink-700 shadow-soft hover:bg-ink-50"
-        >
-          <ArrowLeftRight className="h-3 w-3" /> Swap A and B
-        </button>
+    <section className="rounded-2xl border border-ink-200 bg-white p-5 shadow-soft">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">
+        Compare two products
       </div>
+      <p className="mt-1 max-w-2xl text-[12.5px] leading-relaxed text-ink-600">
+        Pick two products from the Sofas PLP and the narrative below will explain why one is
+        ranked above the other, led by the factor that matters most for the pair.
+      </p>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <ProductPickerTile
+          label="Product A"
+          tone="blue"
+          selected={A}
+          disabledId={pair[1]}
+          onChange={(id) => setPair([id, pair[1]])}
+        />
+        <ProductPickerTile
+          label="Product B"
+          tone="purple"
+          selected={B}
+          disabledId={pair[0]}
+          onChange={(id) => setPair([pair[0], id])}
+        />
+      </div>
+    </section>
+  )
+}
 
-      <div className="mt-4 grid gap-2 md:grid-cols-2">
+function ProductPickerTile({
+  label,
+  tone,
+  selected,
+  disabledId,
+  onChange,
+}: {
+  label: string
+  tone: 'blue' | 'purple'
+  selected: ReturnType<typeof productById>
+  disabledId: string
+  onChange: (id: string) => void
+}) {
+  return (
+    <label
+      className={cx(
+        'group relative flex items-center gap-4 rounded-xl border-2 p-3 transition-all focus-within:ring-2',
+        tone === 'blue'
+          ? 'border-blue-200 bg-blue-50/40 focus-within:border-blue-500 focus-within:ring-blue-100'
+          : 'border-purple-200 bg-purple-50/40 focus-within:border-purple-500 focus-within:ring-purple-100',
+      )}
+    >
+      <ProductThumb product={selected} size="md" />
+      <div className="min-w-0 flex-1">
+        <div
+          className={cx(
+            'text-[10px] font-semibold uppercase tracking-[0.14em]',
+            tone === 'blue' ? 'text-blue-700' : 'text-purple-700',
+          )}
+        >
+          {label}
+        </div>
+        <div className="mt-0.5 flex items-center gap-2">
+          <div className="truncate text-[15px] font-semibold text-ink-900">{selected.name}</div>
+          <RankBadge
+            rank={selected.factors.Popularity.rankWith}
+            tone={tone}
+            size="sm"
+          />
+        </div>
+        <div className="mt-0.5 text-[11px] text-ink-500">{selected.priceLabel}</div>
+        <div className="relative mt-2">
+          <select
+            value={selected.id}
+            onChange={(e) => onChange(e.target.value)}
+            className={cx(
+              'w-full cursor-pointer appearance-none rounded-md border bg-white px-2.5 py-1.5 pr-7 text-[12px] text-ink-800 outline-none',
+              tone === 'blue' ? 'border-blue-200' : 'border-purple-200',
+            )}
+          >
+            {products.map((p) => (
+              <option key={p.id} value={p.id} disabled={p.id === disabledId}>
+                Change to: #{p.factors.Popularity.rankWith} · {p.name}
+                {p.id === disabledId ? ' (already selected)' : ''}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className={cx(
+              'pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2',
+              tone === 'blue' ? 'text-blue-600' : 'text-purple-600',
+            )}
+          />
+        </div>
+      </div>
+    </label>
+  )
+}
+
+function TryAnotherPair({
+  pair,
+  setPair,
+}: {
+  pair: [string, string]
+  setPair: (p: [string, string]) => void
+}) {
+  return (
+    <section className="rounded-2xl border border-ink-200 bg-ink-50/50 p-4 shadow-soft">
+      <div className="flex items-center justify-between">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">
+          Or try another pair
+        </div>
+        <div className="text-[11px] text-ink-500">Picks that read differently</div>
+      </div>
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
         {CURATED_PAIRS.map((cp) => {
-          const active = (pair[0] === cp.a && pair[1] === cp.b) || (pair[0] === cp.b && pair[1] === cp.a)
+          const active =
+            (pair[0] === cp.a && pair[1] === cp.b) || (pair[0] === cp.b && pair[1] === cp.a)
           return (
             <button
               key={cp.label}
@@ -128,37 +231,7 @@ function PairPicker({
           )
         })}
       </div>
-
-      <details className="mt-3">
-        <summary className="cursor-pointer text-[11px] font-medium text-ink-500 hover:text-ink-900">
-          …or pick any two products manually
-        </summary>
-        <div className="mt-2 grid gap-2 md:grid-cols-2">
-          <select
-            value={pair[0]}
-            onChange={(e) => setPair([e.target.value, pair[1]])}
-            className="w-full rounded-md border border-ink-200 bg-white px-2 py-1.5 text-sm"
-          >
-            {products.map((p) => (
-              <option key={p.id} value={p.id} disabled={p.id === pair[1]}>
-                A · #{p.factors.Popularity.rankWith} · {p.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={pair[1]}
-            onChange={(e) => setPair([pair[0], e.target.value])}
-            className="w-full rounded-md border border-ink-200 bg-white px-2 py-1.5 text-sm"
-          >
-            {products.map((p) => (
-              <option key={p.id} value={p.id} disabled={p.id === pair[0]}>
-                B · #{p.factors.Popularity.rankWith} · {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </details>
-    </div>
+    </section>
   )
 }
 

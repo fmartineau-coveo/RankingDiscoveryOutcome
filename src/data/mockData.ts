@@ -822,44 +822,46 @@ export function narrativeForProduct(p: Product): { headline: string; body: strin
   return { headline, body: parts.join(' ') }
 }
 
-// Suggested/curated pairs used by the Head-to-Head and Pairwise Mirror
-// concept pickers. Each selected to surface a distinct scenario so
-// stakeholders can see the narratives change with the input.
+// Suggested pairs used by the Head-to-Head and Pairwise Mirror concept
+// pickers. Labels describe what a merchandiser learns from each pair in
+// their own vocabulary — no internal scenario-library terms (critical swap,
+// asymmetric, convergence, deep-list) which the system prompt keeps for
+// internal reasoning only.
 export const CURATED_PAIRS: { a: string; b: string; label: string; scenarioLabel: string }[] = [
   {
     a: 'velvet-cloud',
     b: 'leather-recliner',
     label: 'Velvet Cloud vs Leather Power Recliner',
-    scenarioLabel: 'Asymmetric · Trendiness tips the scale',
+    scenarioLabel: 'Trendiness keeps a less popular product near the top',
   },
   {
     a: 'meridian-modular',
     b: 'atlas-sectional',
     label: 'Meridian Modular vs Atlas Sectional',
-    scenarioLabel: 'Order preserved · different factor mix',
+    scenarioLabel: 'Two top-of-page products, different reasons for their positions',
   },
   {
     a: 'copenhagen-linen',
     b: 'aurora-curve',
     label: 'Copenhagen Linen vs Aurora Curve',
-    scenarioLabel: 'Convergence · Freshness drives the gap',
+    scenarioLabel: 'Freshness is what sets these two apart',
   },
   {
     a: 'nordic-loft',
     b: 'meridian-modular',
     label: 'Nordic Loft vs Meridian Modular',
-    scenarioLabel: 'Both near the top · no single factor flips the order',
+    scenarioLabel: 'Popularity narrowly decides the top spot',
   },
   {
     a: 'harbor-lounge',
     b: 'emerald-divan',
     label: 'Harbor Lounge vs Emerald Velvet Divan',
-    scenarioLabel: 'Deep-list pair · small moves, low significance',
+    scenarioLabel: 'Popularity flips the order between two mid-list products',
   },
   {
     a: 'velvet-cloud',
     b: 'copenhagen-linen',
     label: 'Velvet Cloud vs Copenhagen Linen',
-    scenarioLabel: 'Two Rising Stars · different dominant factors',
+    scenarioLabel: 'Two rising products, each lifted by a different factor',
   },
 ]
