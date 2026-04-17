@@ -6,9 +6,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Pin,
-  Anchor,
-  Flag,
 } from 'lucide-react'
 import {
   FACTORS,
@@ -18,12 +15,14 @@ import {
   products,
   compositionByProduct,
   compositionLabel,
+  rulesFor,
   type FactorName,
   type Product,
 } from '@/data/mockData'
 import { ProductThumb } from '@/components/primitives/ProductTile'
 import { RankBadge } from '@/components/primitives/RankBadge'
 import { FactorChip } from '@/components/primitives/FactorChip'
+import { RuleCard } from '@/components/primitives/RuleCard'
 import { useConceptState } from '@/lib/conceptState'
 import { cx } from '@/lib/utils'
 
@@ -53,86 +52,10 @@ import { cx } from '@/lib/utils'
  *                     mix specifically.
  */
 
-// ---------------------------------------------------------------------------
-// Local synthetic data — merchandising rules per product.
-//
-// Kept local to V3 so V1 and V2 stay untouched. Rules are realistic for a
-// Sofas PLP (campaign pins, low-margin demotes, affordability pushes). The
-// effect copy stays qualitative — we never claim a precise post-rule rank,
-// only the rule's intent and its approximate directional weight. This is the
-// honest posture: rules are operator-defined, so we can describe their intent
-// verbatim, but their combined effect on the specific rank is an estimate.
-// ---------------------------------------------------------------------------
-
-type RuleKind = 'pin' | 'boost' | 'demote'
-
-type Rule = {
-  id: string
-  name: string
-  kind: RuleKind
-  scope: string
-  rationale: string
-  effect: string
-}
-
-const rulesByProduct: Record<string, Rule[]> = {
-  'nordic-loft': [
-    {
-      id: 'nordic-spring',
-      name: 'Nordic Spring 2026 · pin to top',
-      kind: 'pin',
-      scope: 'Brand = Nordic Collection · Category = Sofas',
-      rationale:
-        'Nordic Collection items are pinned to the top of the Sofas page during the Spring 2026 campaign window (Mar 15 – Apr 30).',
-      effect: 'Pinned to rank #1 on this page.',
-    },
-  ],
-  'copenhagen-linen': [
-    {
-      id: 'q1-affordability',
-      name: 'Q1 affordability push',
-      kind: 'boost',
-      scope: 'Price €1,000 – €2,000',
-      rationale:
-        'Lift mid-priced sofas to support Q1 value-conscious shoppers, without overriding the model\'s preferred ordering inside the boosted band.',
-      effect: 'Small lift — sits a couple of positions higher than the four factors alone would place it.',
-    },
-  ],
-  'atlas-sectional': [
-    {
-      id: 'premium-clearout',
-      name: 'Premium clear-out',
-      kind: 'demote',
-      scope: 'Price above €3,000',
-      rationale:
-        'Downweight premium items to rebalance the browse toward the mid-range while clearing Q4 inventory.',
-      effect: 'Held about 1 position lower than the four factors alone would place it.',
-    },
-  ],
-  'harbor-lounge': [
-    {
-      id: 'low-margin-bundle',
-      name: 'Low-margin bundle · demote',
-      kind: 'demote',
-      scope: 'Tag = bundle-sku',
-      rationale:
-        'Bundled SKUs are pushed below standalone SKUs on category pages, following the current mid-margin mix strategy.',
-      effect: 'Held about 6 positions lower on this page than the four factors alone would place it.',
-    },
-  ],
-  'granite-xl': [
-    {
-      id: 'premium-clearout-2',
-      name: 'Premium clear-out',
-      kind: 'demote',
-      scope: 'Price above €3,000',
-      rationale:
-        'Same Q1 rebalancing rule as applied to other premium items — downweight to push browse toward the mid-range.',
-      effect: 'Held a few positions lower than the four factors alone would place it.',
-    },
-  ],
-  // Other products have no explicit rule entries; the empty state is explicit.
-}
+// Rule data and the RuleCard component live in mockData.ts and the shared
+// primitives folder respectively — imported above. Both the Scorecard V3 and
+// the Merchandising Archetypes read from the same source of truth so the
+// rule story stays consistent across concepts.
 
 type Verdict = {
   label: string
@@ -179,7 +102,7 @@ function narrativeForV3(p: Product): { headline: string; body: string } {
   const top = topPositiveFactor(p)
   const bottom = topNegativeFactor(p)
   const topRis = p.factors[top].ris
-  const rules = rulesByProduct[p.id] ?? []
+  const rules = rulesFor(p.id)
 
   let headline: string
   if (topRis > 0.6) {
@@ -220,7 +143,7 @@ export default function ScorecardV3() {
   const bottom = topNegativeFactor(p)
   const narrative = narrativeForV3(p)
   const composition = compositionByProduct[p.id]
-  const rules = rulesByProduct[p.id] ?? []
+  const rules = rulesFor(p.id)
 
   const orderedFactors = useMemo(
     () => [...FACTORS].sort((a, b) => Math.abs(p.factors[b].ris) - Math.abs(p.factors[a].ris)),
@@ -406,7 +329,7 @@ export default function ScorecardV3() {
           <div className="mt-3 max-h-72 space-y-0.5 overflow-y-auto pr-0.5 scroll-slim">
             {products.map((q) => {
               const active = q.id === focusId
-              const hasRules = (rulesByProduct[q.id] ?? []).length > 0
+              const hasRules = rulesFor(q.id).length > 0
               return (
                 <button
                   key={q.id}
@@ -445,47 +368,6 @@ export default function ScorecardV3() {
         </div>
       </aside>
     </div>
-  )
-}
-
-function RuleCard({ rule }: { rule: Rule }) {
-  const cfg =
-    rule.kind === 'pin'
-      ? { Icon: Pin, tint: 'border-teal-400/50 bg-teal-500/5', accent: 'text-teal-500', label: 'Pin' }
-      : rule.kind === 'boost'
-        ? { Icon: Flag, tint: 'border-teal-400/50 bg-teal-500/5', accent: 'text-teal-500', label: 'Boost' }
-        : { Icon: Anchor, tint: 'border-amber-400/50 bg-amber-400/10', accent: 'text-amber-600', label: 'Demote' }
-  return (
-    <li
-      className={cx(
-        'grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-xl border px-4 py-3',
-        cfg.tint,
-      )}
-    >
-      <div className="grid h-8 w-8 place-items-center rounded-lg bg-white shadow-soft">
-        <cfg.Icon className={cx('h-4 w-4', cfg.accent)} />
-      </div>
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[13px] font-semibold text-ink-900">{rule.name}</span>
-          <span
-            className={cx(
-              'rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em]',
-              rule.kind === 'demote'
-                ? 'border-amber-400/60 bg-white text-amber-600'
-                : 'border-teal-400/60 bg-white text-teal-500',
-            )}
-          >
-            {cfg.label}
-          </span>
-        </div>
-        <div className="mt-0.5 text-[11px] font-mono text-ink-500">{rule.scope}</div>
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-700">{rule.rationale}</p>
-        <p className="mt-1.5 text-[12.5px] font-medium leading-relaxed text-ink-900">
-          Effect on this product: <span className="font-normal text-ink-700">{rule.effect}</span>
-        </p>
-      </div>
-    </li>
   )
 }
 

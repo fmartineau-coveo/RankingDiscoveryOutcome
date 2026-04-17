@@ -80,10 +80,13 @@ export const ARCHETYPES: Record<ArchetypeId, { label: string; blurb: string; ton
     tone: 'ink',
   },
   'at-risk': {
-    // Softened per merchandiser feedback — avoid alarmist framing.
-    label: 'Needs a closer look',
+    // Renamed from the earlier "Needs a closer look" — that label was
+    // softened to the point of not telling the reader anything. The new
+    // label describes what is actually happening on the page without
+    // implying the product itself is defective.
+    label: 'Outpaced here',
     blurb:
-      'More than one factor is currently benefiting its competitors more than this product.',
+      'Multiple factors are lifting competitors more than this product on this page.',
     tone: 'rose',
   },
   'held-back': {
@@ -332,6 +335,92 @@ export const compositionLabel: Record<CompositionHint, string> = {
   'rule-boosted': 'Boosted by rule',
   'rule-demoted': 'Demoted by rule',
   'retrieval-thin': 'Weak retrieval match',
+}
+
+// -------------------------------------------------------------------------
+// Concrete merchandising rules applied per product, synthetic but realistic
+// for a Sofas PLP. Used by the Scorecard V3 and Merchandising Archetypes
+// concepts so both read from the same source of truth.
+//
+// Effect copy stays qualitative on purpose. For pin rules, the pinned target
+// position is stated verbatim because that is what the rule explicitly does.
+// For boost/demote rules, the effect is expressed directionally, never as a
+// precise rule-only counterfactual rank (we do not have that data).
+// -------------------------------------------------------------------------
+
+export type RuleKind = 'pin' | 'boost' | 'demote'
+
+export type Rule = {
+  id: string
+  name: string
+  kind: RuleKind
+  scope: string
+  rationale: string
+  effect: string
+}
+
+export const rulesByProduct: Record<string, Rule[]> = {
+  'nordic-loft': [
+    {
+      id: 'nordic-spring',
+      name: 'Nordic Spring 2026 · pin to top',
+      kind: 'pin',
+      scope: 'Brand = Nordic Collection · Category = Sofas',
+      rationale:
+        'Nordic Collection items are pinned to the top of the Sofas page during the Spring 2026 campaign window (Mar 15 – Apr 30).',
+      effect: 'Pinned to rank #1 on this page.',
+    },
+  ],
+  'copenhagen-linen': [
+    {
+      id: 'q1-affordability',
+      name: 'Q1 affordability push',
+      kind: 'boost',
+      scope: 'Price €1,000 – €2,000',
+      rationale:
+        'Lift mid-priced sofas to support Q1 value-conscious shoppers, without overriding the model\'s preferred ordering inside the boosted band.',
+      effect:
+        'Small lift — sits a couple of positions higher than the four factors alone would place it.',
+    },
+  ],
+  'atlas-sectional': [
+    {
+      id: 'premium-clearout',
+      name: 'Premium clear-out',
+      kind: 'demote',
+      scope: 'Price above €3,000',
+      rationale:
+        'Downweight premium items to rebalance the browse toward the mid-range while clearing Q4 inventory.',
+      effect: 'Held about 1 position lower than the four factors alone would place it.',
+    },
+  ],
+  'harbor-lounge': [
+    {
+      id: 'low-margin-bundle',
+      name: 'Low-margin bundle · demote',
+      kind: 'demote',
+      scope: 'Tag = bundle-sku',
+      rationale:
+        'Bundled SKUs are pushed below standalone SKUs on category pages, following the current mid-margin mix strategy.',
+      effect: 'Held about 6 positions lower on this page than the four factors alone would place it.',
+    },
+  ],
+  'granite-xl': [
+    {
+      id: 'premium-clearout-2',
+      name: 'Premium clear-out',
+      kind: 'demote',
+      scope: 'Price above €3,000',
+      rationale:
+        'Same Q1 rebalancing rule as applied to other premium items — downweight to push browse toward the mid-range.',
+      effect: 'Held a few positions lower than the four factors alone would place it.',
+    },
+  ],
+}
+
+/** Convenience lookup — returns [] for products with no rules applied. */
+export function rulesFor(productId: string): Rule[] {
+  return rulesByProduct[productId] ?? []
 }
 
 // -------------------------------------------------------------------------

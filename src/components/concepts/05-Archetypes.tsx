@@ -4,12 +4,14 @@ import {
   FACTORS,
   products,
   dominantAbsFactor,
+  rulesFor,
   type FactorName,
   type Product,
 } from '@/data/mockData'
 import { ProductThumb } from '@/components/primitives/ProductTile'
 import { RankBadge } from '@/components/primitives/RankBadge'
 import { FactorChip } from '@/components/primitives/FactorChip'
+import { RuleCard, RuleInlineChip } from '@/components/primitives/RuleCard'
 import { risLabel } from '@/lib/ris'
 import { cx } from '@/lib/utils'
 import { ChevronDown, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
@@ -101,9 +103,10 @@ export default function Archetypes() {
         </div>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-700">
           Each product carries one merchandising-friendly label derived from its dominant factor
-          and its position. The label is descriptive, not prescriptive — no judgement of "good" or
-          "bad". Scan the page in rank order to triage it, then{' '}
-          <strong>click any row to see the full factor read</strong> for that product.
+          and its position. Any merchandising rule currently in play on the product is surfaced
+          next to its archetype, so the overview shows both the model's read and your intent at
+          a glance. <strong>Click any row</strong> to see the full factor read and every active
+          rule in detail.
         </p>
       </div>
 
@@ -133,6 +136,7 @@ function ProductRow({
   const arch = ARCHETYPES[p.archetype]
   const dom = dominantAbsFactor(p)
   const r = p.factors[dom].ris
+  const rules = rulesFor(p.id)
   return (
     <article
       className={cx(
@@ -153,15 +157,20 @@ function ProductRow({
           <div className="truncate text-[11px] text-ink-500">{p.priceLabel}</div>
         </div>
         <div>
-          <span
-            className={cx(
-              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium',
-              TONE_CHIP[arch.tone],
-            )}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
-            {arch.label}
-          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={cx(
+                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium',
+                TONE_CHIP[arch.tone],
+              )}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+              {arch.label}
+            </span>
+            {rules.map((rule) => (
+              <RuleInlineChip key={rule.id} rule={rule} />
+            ))}
+          </div>
           <p className="mt-1 text-[11.5px] leading-snug text-ink-700">{arch.blurb}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -181,66 +190,90 @@ function ProductRow({
         </span>
       </button>
 
-      {expanded && <FactorBreakdown p={p} />}
+      {expanded && <ExpandedDetail p={p} />}
     </article>
   )
 }
 
-function FactorBreakdown({ p }: { p: Product }) {
+function ExpandedDetail({ p }: { p: Product }) {
   // Order factors by materiality (|RIS|) so the most important row is first —
   // matches the V3 "What the model is doing" convention.
   const ordered = [...FACTORS].sort(
     (a, b) => Math.abs(p.factors[b].ris) - Math.abs(p.factors[a].ris),
   )
+  const rules = rulesFor(p.id)
   return (
-    <div className="border-t border-ink-200/60 bg-white/70 px-4 pb-4 pt-3">
-      <div className="mb-2 flex items-center justify-between">
-        <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">
-          What the model is doing on {p.name}
-        </h4>
-        <span className="text-[10px] text-ink-500">
-          Four factors · counterfactuals on this page
-        </span>
-      </div>
-      <ul className="divide-y divide-ink-100 overflow-hidden rounded-xl border border-ink-200 bg-white">
-        {ordered.map((f) => {
-          const e = p.factors[f]
-          const v = softVerdict(e.ris)
-          return (
-            <li
-              key={f}
-              className="grid grid-cols-[minmax(0,160px)_minmax(0,1fr)] items-start gap-4 px-4 py-3"
-            >
-              <div className="flex items-center gap-2">
-                <FactorChip factor={f} tone={v.tone} size="sm" />
-                <DirectionGlyph direction={v.direction} />
-              </div>
-              <div className="min-w-0">
-                <div
-                  className={cx(
-                    'text-[13px] font-semibold',
-                    v.tone === 'blue'
-                      ? 'text-blue-800'
-                      : v.tone === 'purple'
-                        ? 'text-purple-800'
-                        : 'text-ink-500',
-                  )}
-                >
-                  {v.label}
+    <div className="space-y-4 border-t border-ink-200/60 bg-white/70 px-4 pb-4 pt-3">
+      {/* What the model is doing */}
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">
+            What the model is doing on {p.name}
+          </h4>
+          <span className="text-[10px] text-ink-500">
+            Four factors · counterfactuals on this page
+          </span>
+        </div>
+        <ul className="divide-y divide-ink-100 overflow-hidden rounded-xl border border-ink-200 bg-white">
+          {ordered.map((f) => {
+            const e = p.factors[f]
+            const v = softVerdict(e.ris)
+            return (
+              <li
+                key={f}
+                className="grid grid-cols-[minmax(0,160px)_minmax(0,1fr)] items-start gap-4 px-4 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <FactorChip factor={f} tone={v.tone} size="sm" />
+                  <DirectionGlyph direction={v.direction} />
                 </div>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-ink-600">
-                  {factorSentence(f, e.rankWith, e.rankWithout, v.direction)}
-                </p>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-      <p className="mt-2 text-[11px] leading-relaxed text-ink-500">
-        This read explains the four model factors only. Merchandising rules and index constraints
-        can also shape where this product lands on the page — see{' '}
-        <em>Rank Influence Flow</em> or the <em>Scorecard V3</em> for the full story.
-      </p>
+                <div className="min-w-0">
+                  <div
+                    className={cx(
+                      'text-[13px] font-semibold',
+                      v.tone === 'blue'
+                        ? 'text-blue-800'
+                        : v.tone === 'purple'
+                          ? 'text-purple-800'
+                          : 'text-ink-500',
+                    )}
+                  >
+                    {v.label}
+                  </div>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-ink-600">
+                    {factorSentence(f, e.rankWith, e.rankWithout, v.direction)}
+                  </p>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+
+      {/* Your merchandising rules */}
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-purple-700">
+            Your merchandising rules on {p.name}
+          </h4>
+          <span className="text-[10px] text-ink-500">
+            Operator-defined · applied after the model
+          </span>
+        </div>
+        {rules.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-ink-300 bg-white px-4 py-3 text-[12px] leading-relaxed text-ink-600">
+            <span className="font-semibold text-ink-800">No merchandising rules apply</span> to{' '}
+            {p.name} on this page. The rank you see comes entirely from the four model factors
+            above.
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {rules.map((r) => (
+              <RuleCard key={r.id} rule={r} />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

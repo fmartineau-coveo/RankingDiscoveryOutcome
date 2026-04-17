@@ -159,7 +159,7 @@ function Preview({ id }: { id: string }) {
             'Volume Driver',
             'Freshness Favorite',
             'Trendiness headwind',
-            'Needs a closer look',
+            'Outpaced here',
           ].map((t, i) => (
             <span
               key={t}

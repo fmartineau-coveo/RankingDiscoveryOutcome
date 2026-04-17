@@ -111,7 +111,7 @@ export const concepts: ConceptMeta[] = [
     posture: 'enterprise',
     question: 'What kind of product is this, in merchandising terms?',
     description:
-      'Each product gets a single descriptive archetype drawn from its dominant RIS factor and its position (Rising Star, Volume Driver, Freshness Favorite, Trendiness headwind, Strong Popularity deep rank, Needs a closer look…). Labels are descriptive, not alarmist — they compress the nuance of the scorecard into one tag a merchandiser can use to triage the whole page.',
+      'Each product gets a single descriptive archetype drawn from its dominant RIS factor and its position (Rising Star, Volume Driver, Freshness Favorite, Trendiness headwind, Strong Popularity deep rank, Outpaced here…). Labels are descriptive, not alarmist — they compress the nuance of the scorecard into one tag a merchandiser can use to triage the whole page. Any merchandising rule currently in play is surfaced next to the archetype, and clicking a row expands the full factor read alongside the active rules.',
     notClaimed:
       'Archetypes are heuristics layered on top of the RIS, not formal classes learned by the model. A product may fit more than one archetype weakly.',
     group: 'approach-1',
