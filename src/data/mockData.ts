@@ -295,17 +295,11 @@ export type PairwiseNarrative = {
   paragraphs: string[]
 }
 
-export const pairwiseVelvetVsRecliner: PairwiseNarrative = {
-  aId: 'velvet-cloud',
-  bId: 'leather-recliner',
-  headline:
-    'Trendiness is the main reason the Velvet Cloud Sofa sits above the Leather Power Recliner.',
-  paragraphs: [
-    'Trendiness is almost single-handedly keeping the Velvet Cloud Sofa in the top 3 — without it, the Sofa would fall from rank 3 to rank 22, while the Recliner would barely move. Freshness also favours the Sofa: it benefits from being a newer catalog entry, while the same factor actively works against the Recliner on this page.',
-    'The Recliner does have strong Popularity support — without it, it would slip from rank 18 to rank 25 — but that advantage is not enough to close the gap that Trendiness creates in the Sofa\'s favour. Engagement has negligible impact on the relative ordering of these two products.',
-    'In short, the Sofa is ahead because it is currently trending; the Recliner\'s Popularity is helping it, just not enough to overcome the Sofa\'s Trendiness edge.',
-  ],
-}
+// `pairwiseVelvetVsRecliner` is defined later in this file (after
+// `narrativeForPair`), derived from the same generator every other pair uses
+// so the voice stays consistent. Declared here as a forward reference for
+// any module that imported the name historically.
+export let pairwiseVelvetVsRecliner: PairwiseNarrative
 
 // -------------------------------------------------------------------------
 // Rank-composition hint for concepts that need to show how the final rank
@@ -559,106 +553,231 @@ export function rankFactorsForPair(a: Product, b: Product): { factor: FactorName
   }).sort((x, y) => y.score - x.score)
 }
 
+// ---------------------------------------------------------------------------
+// Pairwise narrative generator — discovery voice.
+//
+// Voice rules, mirrored from the discovery report's "Example output":
+//   1. Headline:   "{Dominant} is the main reason {top} is ranked above
+//                   {other}." Always declarative, names the decisive factor.
+//   2. Counterfactual + translation: "Without {Dominant}, {top} would
+//                   {verb_top}, while {other} would {verb_other} — {meaning}."
+//                   The em-dash clause turns the counterfactual numbers into
+//                   a business conclusion (who's actually stronger overall,
+//                   who'd overtake, who'd pull ahead).
+//   3. Secondary factors: declarative, not hypothetical. Reinforcing ones
+//                   read as "also favours {top}" or "provides a smaller
+//                   additional boost". Counterbalancing ones read as "works
+//                   the other way" or "{other} does have strong {F} support".
+//   4. Negligibles: one-line dismissal — "{F1} and {F2} have negligible
+//                   impact on the gap between the two products." — only when
+//                   two or more factors are negligible and we have room.
+//
+// Interpretation discipline:
+//   - `rankWithout > rankWith` means the factor is helping that product.
+//   - `swing = (gap_without - gap_with)` where gap = other.rankWith -
+//     top.rankWith (positive = top is ahead on the page).
+//   - `swing < 0` → removing the factor narrows the gap → the factor is
+//     currently creating / reinforcing top's lead.
+//   - `swing > 0` → removing the factor widens the gap → the factor is
+//     currently compressing top's lead (helps other more than top).
+//   - `flips` → sign change of the gap → the factor is decisive for ordering.
+// ---------------------------------------------------------------------------
+
+type PairFactorAnalysis = {
+  factor: FactorName
+  topRankWith: number
+  topRankWithout: number
+  otherRankWith: number
+  otherRankWithout: number
+  topDelta: number
+  otherDelta: number
+  gapWith: number
+  gapWithout: number
+  swing: number
+  flips: boolean
+  score: number
+}
+
+function analyzePairFactor(f: FactorName, top: Product, other: Product): PairFactorAnalysis {
+  const tw = top.factors[f]
+  const ow = other.factors[f]
+  const topDelta = tw.rankWithout - tw.rankWith
+  const otherDelta = ow.rankWithout - ow.rankWith
+  const gapWith = ow.rankWith - tw.rankWith
+  const gapWithout = ow.rankWithout - tw.rankWithout
+  const swing = gapWithout - gapWith
+  const flips = (gapWith > 0 && gapWithout < 0) || (gapWith < 0 && gapWithout > 0)
+  // Top-of-list movements count disproportionately (discovery's position weight)
+  const topWeight = 1 / Math.log2(1 + Math.min(tw.rankWith, ow.rankWith))
+  const score = topWeight * (flips ? 20 + Math.abs(swing) : Math.abs(swing))
+  return {
+    factor: f,
+    topRankWith: tw.rankWith,
+    topRankWithout: tw.rankWithout,
+    otherRankWith: ow.rankWith,
+    otherRankWithout: ow.rankWithout,
+    topDelta,
+    otherDelta,
+    gapWith,
+    gapWithout,
+    swing,
+    flips,
+    score,
+  }
+}
+
+/** Rank-change verb that respects size: "fall from X to Y" for big drops,
+ *  "drop" for moderate, "move only from X to Y" for tiny movements,
+ *  "move up from X to Y" when removing a factor improves rank. */
+function rankMovementPhrase(rankWith: number, rankWithout: number): string {
+  const delta = rankWithout - rankWith
+  if (delta === 0) return `stay at rank ${rankWith}`
+  if (Math.abs(delta) <= 2) return `move only from ${rankWith} to ${rankWithout}`
+  if (delta > 0) {
+    if (delta >= 15) return `fall from ${rankWith} to ${rankWithout}`
+    return `drop from ${rankWith} to ${rankWithout}`
+  }
+  // Factor was hurting this product; removing it pulls the rank up
+  if (Math.abs(delta) >= 10) return `jump from ${rankWith} to ${rankWithout}`
+  return `move up from ${rankWith} to ${rankWithout}`
+}
+
+/** The em-dash clause that turns the counterfactual into a business
+ *  conclusion the merchandiser can act on. */
+function dominantInterpretation(dom: PairFactorAnalysis, top: Product, other: Product): string {
+  // Asymmetric: dominant factor moves top a lot, other barely
+  if (Math.abs(dom.topDelta) >= 10 && Math.abs(dom.otherDelta) <= 3) {
+    return `meaning ${dom.factor} is almost single-handedly keeping ${top.name} in its current position`
+  }
+  // Order flips when dominant is removed
+  if (dom.flips) {
+    const flipMargin = Math.abs(dom.gapWithout)
+    // Wide margin flip + other moves up while top drops = "other is stronger overall"
+    const otherMovesUp = dom.otherDelta < -2
+    const topDropsMaterially = dom.topDelta > 2
+    if (flipMargin >= 5 && otherMovesUp && topDropsMaterially) {
+      return `meaning ${other.name} is actually the stronger product on most other factors, but ${dom.factor} gives ${top.name} a decisive edge on this page`
+    }
+    if (flipMargin >= 5) {
+      return `so ${other.name} would end up ahead of ${top.name} by a wide margin`
+    }
+    return `so ${other.name} would end up ahead of ${top.name}`
+  }
+  // No flip, but the factor is doing most of the separation work
+  if (dom.swing <= -8) {
+    return `meaning ${dom.factor} is doing most of the work keeping ${top.name} ahead of ${other.name}`
+  }
+  if (dom.swing >= 8) {
+    return `meaning ${dom.factor} is the only thing narrowing what would otherwise be a wider gap`
+  }
+  // Default: it's still the dominant factor, just less dramatic
+  return `meaning ${dom.factor} is the single biggest factor shaping their relative positions on this page`
+}
+
+/** Declarative sentence describing a secondary factor's role. */
+function secondarySentence(
+  sec: PairFactorAnalysis,
+  top: Product,
+  other: Product,
+  dominantName: FactorName,
+): string {
+  const reinforcing = sec.swing < 0 // narrows gap when removed = currently reinforces top's lead
+  if (reinforcing) {
+    // Strong reinforcement + factor also actively works against other
+    if (Math.abs(sec.swing) >= 8 && sec.topDelta > 3 && sec.otherDelta < -3) {
+      return `${sec.factor} also favours ${top.name}: it lifts the product here while working against ${other.name}'s position, quietly widening the gap.`
+    }
+    if (Math.abs(sec.swing) >= 8) {
+      return `${sec.factor} also favours ${top.name}, widening the gap further.`
+    }
+    if (Math.abs(sec.swing) >= 4) {
+      return `${sec.factor} also tilts things in ${top.name}'s favour, though less dramatically.`
+    }
+    return `${sec.factor} provides a small additional boost to ${top.name}'s position.`
+  }
+  // Counterbalancing: factor currently helps other more than top (compressing the gap)
+  if (sec.otherDelta >= 5) {
+    // Other has strong support from this factor — name it explicitly
+    return `${other.name} does have strong ${sec.factor} support — without it, ${other.name} would ${rankMovementPhrase(sec.otherRankWith, sec.otherRankWithout)} — but it isn't enough to close the gap ${dominantName} creates.`
+  }
+  // Quieter counterbalance
+  return `${sec.factor} works the other way: it benefits ${other.name} more than ${top.name}, which is why today's gap between them is narrower than ${dominantName} alone would suggest.`
+}
+
+function negligibleSentence(negs: PairFactorAnalysis[]): string {
+  const names = negs.map((n) => n.factor)
+  const joined =
+    names.length === 2
+      ? names.join(' and ')
+      : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
+  return `${joined} have negligible impact on the gap between the two products.`
+}
+
 /**
- * Generate a pairwise narrative for any (A, B) pair. Hand-written for the
- * canonical pair; template-generated for all others, but with the same
- * tone rules and structure.
+ * Generate a pairwise narrative for any (A, B) pair. Always derived from the
+ * two products' raw rank counterfactuals; the canonical Velvet-vs-Recliner
+ * pair is no longer hand-authored separately — it flows through the same
+ * generator so the voice is identical across every pair in the showcase.
  */
 export function narrativeForPair(a: Product, b: Product): PairwiseNarrative {
-  // Canonical hand-authored narrative
-  if (a.id === pairwiseVelvetVsRecliner.aId && b.id === pairwiseVelvetVsRecliner.bId)
-    return pairwiseVelvetVsRecliner
-  if (a.id === pairwiseVelvetVsRecliner.bId && b.id === pairwiseVelvetVsRecliner.aId) {
-    // Invert the hand-authored narrative by swapping subject.
-    return {
-      aId: a.id,
-      bId: b.id,
-      headline: `Popularity is not enough to close the gap: the Velvet Cloud Sofa stays above the Leather Power Recliner.`,
-      paragraphs: [
-        `${a.name} has strong Popularity support on this page — without it, it would slip a few positions — but on its own that advantage is not enough to overcome the Velvet Cloud Sofa's Trendiness edge.`,
-        `Trendiness is what keeps the Sofa in the top 3 and it has almost no effect on ${a.name}. Freshness actively works against ${a.name} here while helping the Sofa.`,
-        `In short: ${a.name}'s Popularity helps, but Trendiness and Freshness are what keep the Sofa visibly ahead.`,
-      ],
-    }
-  }
-
-  // Generic generator — truthful, derived from raw ablation numbers.
-  const ranked = rankFactorsForPair(a, b)
-  const dominant = ranked[0].factor
-  const secondary = ranked.slice(1, 3).filter((x) => x.score > 0.4)
+  // Narrate from the perspective of whichever product is currently ranked
+  // higher on the page. "top.name is ranked above other.name" must always
+  // match reality regardless of the argument order the caller passed.
   const aRank = a.factors.Popularity.rankWith
   const bRank = b.factors.Popularity.rankWith
+  const top = aRank <= bRank ? a : b
+  const other = aRank <= bRank ? b : a
 
-  const aDom = a.factors[dominant]
-  const bDom = b.factors[dominant]
-  const scenario = classifyPairScenario(aDom, bDom)
+  const analyses = FACTORS.map((f) => analyzePairFactor(f, top, other)).sort(
+    (x, y) => y.score - x.score,
+  )
+  const dom = analyses[0]
+  const rest = analyses.slice(1)
 
-  const headline = (() => {
-    if (scenario === 'critical-swap')
-      return `${dominant} is the single factor deciding whether ${a.name} or ${b.name} ranks higher.`
-    if (scenario === 'asymmetric')
-      return `${dominant} is disproportionately affecting one of the two products.`
-    if (scenario === 'convergence')
-      return `${dominant} is the main reason ${a.name} currently sits ahead of ${b.name}.`
-    if (scenario === 'divergence')
-      return `${dominant} is actively closing what would otherwise be a wider gap.`
-    if (scenario === 'zone-shift')
-      return `${dominant} moves both products, but does not decide the order between them.`
-    if (scenario === 'flat')
-      return `No single factor is meaningfully separating ${a.name} from ${b.name} on this page.`
-    return `${dominant} is the factor most responsible for the current ordering.`
-  })()
+  // Material threshold: |swing| >= 4 positions in the gap between the two.
+  // Engagement-sized nudges below that read as negligible.
+  const materialRest = rest.filter((x) => Math.abs(x.swing) >= 4)
+  const negligibleRest = rest.filter((x) => Math.abs(x.swing) < 4)
 
-  const p1 = (() => {
-    const aPart = `Without ${dominant}, ${a.name} ${verbWith(aDom.rankWith, aDom.rankWithout)}`
-    const bPart = `while ${b.name} ${verbWith(bDom.rankWith, bDom.rankWithout)}`
-    return `${aPart}, ${bPart}.`
-  })()
+  // Sentence 1 — headline
+  const headline = `${dom.factor} is the main reason ${top.name} is ranked above ${other.name}.`
 
-  const p2Parts: string[] = []
-  for (const { factor } of secondary) {
-    const af = a.factors[factor]
-    const bf = b.factors[factor]
-    const dA = af.rankWithout - af.rankWith
-    const dB = bf.rankWithout - bf.rankWith
-    if (Math.abs(dA) < 2 && Math.abs(dB) < 2) continue
-    if (Math.sign(dA) !== Math.sign(dB) && dA !== 0 && dB !== 0) {
-      p2Parts.push(
-        `${factor} works in opposite directions on the two products — ${
-          dA > 0 ? `it helps ${a.name}` : `it hurts ${a.name}`
-        } and ${dB > 0 ? `helps ${b.name}` : `hurts ${b.name}`}.`,
-      )
-    } else if (Math.abs(dA - dB) < 2) {
-      p2Parts.push(
-        `${factor} moves both products similarly — it is not what is driving the gap.`,
-      )
-    } else {
-      p2Parts.push(
-        `${factor} affects both, but favours ${
-          Math.abs(dA) > Math.abs(dB) ? a.name : b.name
-        } more.`,
-      )
-    }
+  // Sentence 2 — counterfactual + interpretation
+  const s2 = `Without ${dom.factor}, ${top.name} would ${rankMovementPhrase(
+    dom.topRankWith,
+    dom.topRankWithout,
+  )}, while ${other.name} would ${rankMovementPhrase(
+    dom.otherRankWith,
+    dom.otherRankWithout,
+  )} — ${dominantInterpretation(dom, top, other)}.`
+
+  // Subsequent sentences — up to 2 material secondaries, then a negligible
+  // dismissal if there's room and it helps complete the picture.
+  const paragraphs: string[] = [s2]
+  const secondariesShown = materialRest.slice(0, 2)
+  for (const sec of secondariesShown) {
+    paragraphs.push(secondarySentence(sec, top, other, dom.factor))
   }
-  const p2 = p2Parts.join(' ')
-
-  const takeaway = (() => {
-    if (scenario === 'flat')
-      return `Their ordering on this page is not being decided by any single factor — other products on the list are doing most of the work.`
-    if (scenario === 'critical-swap')
-      return `If ${dominant} were removed or changed, the order between these two would flip.`
-    if (scenario === 'zone-shift')
-      return `Their relative order is stable; both would move together if this factor changed.`
-    return `${a.name} currently sits at rank ${aRank}, ${b.name} at ${bRank}; ${dominant} is the clearest reason why.`
-  })()
+  if (secondariesShown.length < 2 && negligibleRest.length >= 2) {
+    paragraphs.push(negligibleSentence(negligibleRest))
+  }
 
   return {
     aId: a.id,
     bId: b.id,
     headline,
-    paragraphs: [p1, p2, takeaway].filter(Boolean),
+    paragraphs,
   }
 }
+
+// Now that the generator is defined, populate the canonical hand-authored
+// reference by running the generator on Velvet Cloud vs Leather Recliner.
+// Keeps the export alive for any module still importing it without carrying
+// a separate hand-written copy that could drift from the generator's voice.
+pairwiseVelvetVsRecliner = narrativeForPair(
+  products.find((p) => p.id === 'velvet-cloud')!,
+  products.find((p) => p.id === 'leather-recliner')!,
+)
 
 // -------------------------------------------------------------------------
 // Product-level (single product) plain-language explanation, grounded in
