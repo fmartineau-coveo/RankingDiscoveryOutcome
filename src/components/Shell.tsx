@@ -6,6 +6,7 @@ import { useAppState } from '@/lib/appState'
 import { COMMENT_ROOT_ATTR } from '@/lib/comments'
 import { CommentsToolbar } from '@/components/comments/CommentsPanel'
 import { CommentsLayer } from '@/components/comments/CommentsLayer'
+import { useHiddenConcepts } from '@/lib/hiddenConcepts'
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const loc = useLocation()
@@ -123,14 +124,29 @@ function PinnedLink() {
 }
 
 function Sidebar({ collapsed }: { collapsed: boolean }) {
+  const { isHidden, hidden } = useHiddenConcepts()
   if (collapsed) return null
+  const visible = concepts.filter((c) => !isHidden(c.id))
   return (
     <aside className="sticky top-20 mr-6 hidden h-[calc(100vh-5.5rem)] w-64 shrink-0 overflow-y-auto rounded-2xl border border-ink-200 bg-white p-2 shadow-soft xl:block">
-      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-ink-500">
-        18 concepts
+      <div className="flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-ink-500">
+        <span>
+          {visible.length === concepts.length
+            ? `${concepts.length} concepts`
+            : `${visible.length} of ${concepts.length} concepts`}
+        </span>
+        {hidden.length > 0 && (
+          <NavLink
+            to="/gallery?view=hidden"
+            className="rounded-full border border-ink-200 bg-white px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-purple-700 hover:bg-purple-50"
+            title="See and restore hidden concepts"
+          >
+            {hidden.length} hidden
+          </NavLink>
+        )}
       </div>
       <ol className="space-y-0.5">
-        {concepts.map((c) => (
+        {visible.map((c) => (
           <li key={c.id}>
             <NavLink
               to={`/concepts/${c.id}`}

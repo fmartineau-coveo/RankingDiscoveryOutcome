@@ -1,12 +1,14 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, HelpCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, HelpCircle, EyeOff, RotateCcw } from 'lucide-react'
 import { concepts, conceptById } from '@/data/concepts'
 import { ApproachTag, PostureTag } from '@/components/primitives/ApproachTag'
 import { HonestyNote } from '@/components/primitives/HonestyNote'
 import { ConceptStateProvider } from '@/lib/conceptState'
 import { PinButton } from '@/components/primitives/PinButton'
 import { useConceptState } from '@/lib/conceptState'
+import { useHiddenConcepts } from '@/lib/hiddenConcepts'
 import { productById } from '@/data/mockData'
+import { cx } from '@/lib/utils'
 
 export function ConceptDetail() {
   const { id } = useParams()
@@ -68,6 +70,8 @@ export function ConceptDetail() {
           </div>
         </div>
 
+        <HiddenBanner conceptId={concept.id} />
+
         <header className="rounded-2xl border border-ink-200 bg-white p-8 shadow-card">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-500">
@@ -78,7 +82,10 @@ export function ConceptDetail() {
               <ApproachTag approach={concept.approach} />
               <PostureTag posture={concept.posture} />
             </div>
-            <PinControls conceptId={concept.id} conceptTitle={concept.title} />
+            <div className="flex items-center gap-1.5">
+              <HideToggle conceptId={concept.id} />
+              <PinControls conceptId={concept.id} conceptTitle={concept.title} />
+            </div>
           </div>
           <h1 className="display mt-3 text-5xl leading-[1.05] tracking-tight text-ink-950">
             {concept.title}
@@ -154,5 +161,50 @@ function PinControls({ conceptId, conceptTitle }: { conceptId: string; conceptTi
       subtitle={subtitle}
       state={Object.keys(state).length ? state : undefined}
     />
+  )
+}
+
+function HideToggle({ conceptId }: { conceptId: string }) {
+  const { isHidden, hide, unhide } = useHiddenConcepts()
+  const hidden = isHidden(conceptId)
+  return (
+    <button
+      onClick={() => (hidden ? unhide(conceptId) : hide(conceptId))}
+      className={cx(
+        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium shadow-soft transition-colors',
+        hidden
+          ? 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'
+          : 'border-ink-200 bg-white text-ink-700 hover:bg-ink-50',
+      )}
+      title={
+        hidden
+          ? 'Restore this concept to the sidebar and gallery'
+          : 'Hide this concept from the sidebar and gallery (reversible)'
+      }
+    >
+      {hidden ? <RotateCcw className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+      {hidden ? 'Restore to showcase' : 'Hide from showcase'}
+    </button>
+  )
+}
+
+function HiddenBanner({ conceptId }: { conceptId: string }) {
+  const { isHidden, unhide } = useHiddenConcepts()
+  if (!isHidden(conceptId)) return null
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-purple-200 bg-purple-50/60 px-4 py-2.5 text-[12.5px] text-ink-800">
+      <EyeOff className="h-3.5 w-3.5 shrink-0 text-purple-700" />
+      <span>
+        <strong className="text-purple-700">Hidden from your showcase.</strong> This concept is
+        still reachable at this URL, but doesn't appear in the sidebar or gallery until you restore
+        it.
+      </span>
+      <button
+        onClick={() => unhide(conceptId)}
+        className="ml-auto inline-flex items-center gap-1 rounded-md border border-purple-300 bg-white px-2 py-1 text-[11px] font-medium text-purple-700 hover:bg-purple-50"
+      >
+        <RotateCcw className="h-3 w-3" /> Restore
+      </button>
+    </div>
   )
 }

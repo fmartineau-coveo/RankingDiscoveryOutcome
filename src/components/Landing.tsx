@@ -2,8 +2,12 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Gauge, MessagesSquare, AlertTriangle, Sparkles } from 'lucide-react'
 import { concepts } from '@/data/concepts'
 import { ConceptGallery } from '@/components/ConceptGallery'
+import { useHiddenConcepts } from '@/lib/hiddenConcepts'
 
 export function Landing() {
+  const { isHidden } = useHiddenConcepts()
+  const visible = concepts.filter((c) => !isHidden(c.id))
+  const allShown = visible.length === concepts.length
   return (
     <div className="space-y-16">
       <Hero />
@@ -15,11 +19,15 @@ export function Landing() {
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-purple-600">
               Gallery
             </div>
-            <h2 className="display text-4xl text-ink-900">18 concept directions</h2>
+            <h2 className="display text-4xl text-ink-900">
+              {allShown
+                ? `${concepts.length} concept directions`
+                : `${visible.length} of ${concepts.length} concept directions in your showcase`}
+            </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600">
-              Ten grounded / enterprise-ready patterns and eight bold / visionary ones. Every
-              concept is grounded in one of the two approved explainability approaches and uses the
-              same sofas PLP so they can be compared side-by-side.
+              {allShown
+                ? 'Ten grounded / enterprise-ready patterns and eight bold / visionary ones. Every concept is grounded in one of the two approved explainability approaches and uses the same sofas PLP so they can be compared side-by-side.'
+                : 'You\'ve curated the showcase down to the concepts that read best to you. Hidden concepts are still reachable by direct URL and can be restored at any time from the gallery page.'}
             </p>
           </div>
           <Link
@@ -29,7 +37,7 @@ export function Landing() {
             Full gallery <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
-        <ConceptGallery concepts={concepts} />
+        <ConceptGallery concepts={visible} />
       </section>
       <Footer />
     </div>

@@ -7,11 +7,13 @@ import { GalleryPage } from '@/components/GalleryPage'
 import { PinnedPage } from '@/components/PinnedPage'
 import { AppStateProvider } from '@/lib/appState'
 import { CommentsProvider } from '@/lib/comments'
+import { HiddenConceptsProvider } from '@/lib/hiddenConcepts'
 
 export default function App() {
   return (
     <AppStateProvider>
-      <CommentsProvider>
+      <HiddenConceptsProvider>
+        <CommentsProvider>
         <Shell>
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -22,7 +24,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Shell>
-      </CommentsProvider>
+        </CommentsProvider>
+      </HiddenConceptsProvider>
     </AppStateProvider>
   )
 }

@@ -1,58 +1,114 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Gauge, MessagesSquare, Layers } from 'lucide-react'
+import { ArrowUpRight, Gauge, MessagesSquare, Layers, EyeOff, RotateCcw } from 'lucide-react'
 import type { ConceptMeta } from '@/data/concepts'
+import { useHiddenConcepts } from '@/lib/hiddenConcepts'
 import { cx } from '@/lib/utils'
 
-export function ConceptGallery({ concepts }: { concepts: ConceptMeta[] }) {
+export function ConceptGallery({
+  concepts,
+  restorable = false,
+  onRestore,
+}: {
+  concepts: ConceptMeta[]
+  /** When true, cards show a Restore button instead of the Hide affordance. */
+  restorable?: boolean
+  /** Called when the user clicks Restore on a card (only used when restorable). */
+  onRestore?: (id: string) => void
+}) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {concepts.map((c) => (
-        <GalleryCard key={c.id} c={c} />
+        <GalleryCard
+          key={c.id}
+          c={c}
+          restorable={restorable}
+          onRestore={onRestore ? () => onRestore(c.id) : undefined}
+        />
       ))}
     </div>
   )
 }
 
-function GalleryCard({ c }: { c: ConceptMeta }) {
+function GalleryCard({
+  c,
+  restorable,
+  onRestore,
+}: {
+  c: ConceptMeta
+  restorable: boolean
+  onRestore?: () => void
+}) {
+  const { hide } = useHiddenConcepts()
   const approachIcon =
     c.approach === 'ris' ? Gauge : c.approach === 'pairwise' ? MessagesSquare : Layers
   const Icon = approachIcon
   return (
-    <Link
-      to={`/concepts/${c.id}`}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
-    >
-      <Preview id={c.id} />
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] font-semibold text-ink-400">
-            {String(c.number).padStart(2, '0')}
-          </span>
-          <span
-            className={cx(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
-              c.approach === 'ris'
-                ? 'bg-blue-50 text-blue-700'
-                : c.approach === 'pairwise'
-                  ? 'bg-purple-50 text-purple-700'
-                  : 'bg-ink-100 text-ink-700',
-            )}
-          >
-            <Icon className="h-2.5 w-2.5" />
-            {c.approach === 'ris' ? 'RIS' : c.approach === 'pairwise' ? 'Pairwise' : 'Hybrid'}
-          </span>
-          <span className="ml-auto text-[10px] text-ink-500">
-            {c.posture === 'enterprise' ? 'Enterprise-ready' : 'Bold · visionary'}
-          </span>
+    <div className="group relative">
+      <Link
+        to={`/concepts/${c.id}`}
+        className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
+      >
+        <Preview id={c.id} />
+        <div className="flex flex-1 flex-col gap-3 p-5">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-semibold text-ink-400">
+              {String(c.number).padStart(2, '0')}
+            </span>
+            <span
+              className={cx(
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                c.approach === 'ris'
+                  ? 'bg-blue-50 text-blue-700'
+                  : c.approach === 'pairwise'
+                    ? 'bg-purple-50 text-purple-700'
+                    : 'bg-ink-100 text-ink-700',
+              )}
+            >
+              <Icon className="h-2.5 w-2.5" />
+              {c.approach === 'ris' ? 'RIS' : c.approach === 'pairwise' ? 'Pairwise' : 'Hybrid'}
+            </span>
+            <span className="ml-auto text-[10px] text-ink-500">
+              {c.posture === 'enterprise' ? 'Enterprise-ready' : 'Bold · visionary'}
+            </span>
+          </div>
+          <h3 className="text-[17px] font-semibold leading-tight text-ink-900">{c.title}</h3>
+          <p className="line-clamp-2 text-[13px] leading-relaxed text-ink-600">{c.tagline}</p>
+          <div className="mt-auto flex items-center justify-between border-t border-ink-100 pt-3 text-[11px] text-ink-500">
+            <span>{c.question}</span>
+            <ArrowUpRight className="h-3.5 w-3.5 text-ink-400 transition-colors group-hover:text-ink-900" />
+          </div>
         </div>
-        <h3 className="text-[17px] font-semibold leading-tight text-ink-900">{c.title}</h3>
-        <p className="line-clamp-2 text-[13px] leading-relaxed text-ink-600">{c.tagline}</p>
-        <div className="mt-auto flex items-center justify-between border-t border-ink-100 pt-3 text-[11px] text-ink-500">
-          <span>{c.question}</span>
-          <ArrowUpRight className="h-3.5 w-3.5 text-ink-400 transition-colors group-hover:text-ink-900" />
-        </div>
-      </div>
-    </Link>
+      </Link>
+
+      {/* Hover corner action: Hide (default) or Restore (when viewing hidden) */}
+      {restorable ? (
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onRestore?.()
+          }}
+          className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full border border-purple-300 bg-white/95 px-2 py-1 text-[10px] font-semibold text-purple-700 shadow-soft hover:bg-purple-50"
+          title="Restore this concept to the showcase"
+        >
+          <RotateCcw className="h-3 w-3" />
+          Restore
+        </button>
+      ) : (
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            hide(c.id)
+          }}
+          className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full border border-ink-200 bg-white/95 px-2 py-1 text-[10px] font-medium text-ink-600 opacity-0 shadow-soft transition-opacity hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 group-hover:opacity-100"
+          title="Hide this concept from the showcase (reversible)"
+        >
+          <EyeOff className="h-3 w-3" />
+          Hide
+        </button>
+      )}
+    </div>
   )
 }
 
