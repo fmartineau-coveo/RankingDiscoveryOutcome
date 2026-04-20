@@ -565,6 +565,250 @@ function Preview({ id }: { id: string }) {
           </div>
         </div>
       )
+    case 'tipping-point':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <div className="flex h-full flex-col gap-1.5 justify-center">
+            {[0.3, 0.9, 0.55, 0.9, 0.3].map((w, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="h-2 w-6 rounded-sm bg-ink-200" />
+                <div className="h-1.5 flex-1 rounded-full bg-ink-100">
+                  <div
+                    className={cx(
+                      'h-full rounded-full',
+                      w < 0.5 ? 'bg-amber-500' : 'bg-blue-500',
+                    )}
+                    style={{ width: `${w * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    case 'build-up-storyboard':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <div className="grid h-full grid-cols-4 gap-1.5">
+            {[0, 1, 2, 3].map((step) => (
+              <div key={step} className="flex flex-col gap-1 rounded border border-ink-200 bg-white p-1.5">
+                <div className="text-[7px] font-semibold uppercase text-purple-600">S{step}</div>
+                <div className="flex flex-col gap-0.5">
+                  {[0, 1, 2].map((r) => {
+                    const isNew = step > 0 && r === step - 1
+                    return (
+                      <div
+                        key={r}
+                        className={cx(
+                          'h-1.5 rounded-full',
+                          isNew ? 'bg-purple-500' : 'bg-ink-200',
+                        )}
+                        style={{ width: `${80 - r * 15}%` }}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    case 'baseline-swap-map':
+      return (
+        <div className={cx(common, 'p-5')}>
+          <div className="grid h-full grid-cols-2 gap-2">
+            <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-2">
+              <div className="text-[8px] font-semibold uppercase text-blue-700">Lifted</div>
+              {[0, 1, 2].map((r) => (
+                <div key={r} className="mt-1 flex items-center gap-1">
+                  <div className="h-1.5 w-2 rounded-sm bg-blue-500" />
+                  <div className="h-1 flex-1 rounded-full bg-ink-200" />
+                </div>
+              ))}
+            </div>
+            <div className="rounded-lg border border-purple-200 bg-purple-50/40 p-2">
+              <div className="text-[8px] font-semibold uppercase text-purple-700">Held back</div>
+              {[0, 1, 2].map((r) => (
+                <div key={r} className="mt-1 flex items-center gap-1">
+                  <div className="h-1.5 w-2 rounded-sm bg-purple-500" />
+                  <div className="h-1 flex-1 rounded-full bg-ink-200" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+    case 'alternative-scenarios':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <div className="grid h-full grid-cols-2 gap-1.5">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={cx(
+                  'flex flex-col justify-center gap-0.5 rounded border p-1.5',
+                  i === 1 ? 'border-purple-400 bg-purple-50' : 'border-ink-200 bg-white',
+                )}
+              >
+                <div className="h-0.5 w-full rounded-full bg-purple-300" style={{ opacity: 0.5 + i * 0.12 }} />
+                <div className="h-0.5 w-4/5 rounded-full bg-ink-200" />
+                <div className="h-0.5 w-3/5 rounded-full bg-ink-200" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    case 'stability-map':
+      return (
+        <div className={cx(common, 'p-5')}>
+          <svg viewBox="0 0 200 110" className="h-full w-full">
+            <line x1="10" y1="95" x2="190" y2="95" stroke="#DDE1EF" />
+            <line x1="10" y1="15" x2="10" y2="95" stroke="#DDE1EF" />
+            {[
+              { x: 30, y: 75, r: 7, fill: '#3B68F4' },
+              { x: 60, y: 35, r: 9, fill: '#7D3EE0' },
+              { x: 85, y: 60, r: 7, fill: '#3B68F4' },
+              { x: 115, y: 40, r: 8, fill: '#7D3EE0' },
+              { x: 145, y: 72, r: 6, fill: '#8BAEFF' },
+              { x: 170, y: 85, r: 7, fill: '#9096B8' },
+            ].map((d, i) => (
+              <circle key={i} cx={d.x} cy={d.y} r={d.r} fill={d.fill} fillOpacity={0.75} stroke="white" strokeWidth="1.5" />
+            ))}
+          </svg>
+        </div>
+      )
+    case 'winners-losers':
+      return (
+        <div className={cx(common, 'p-3')}>
+          <div className="grid h-full grid-cols-4 gap-1">
+            {[0, 1, 2, 3].map((col) => (
+              <div key={col} className="flex flex-col gap-1 rounded border border-ink-200 bg-white p-1">
+                <div className={cx('h-1 w-full rounded-full', col % 2 === 0 ? 'bg-blue-400' : 'bg-purple-400')} />
+                {[0, 1, 2].map((r) => (
+                  <div key={r} className="h-1.5 rounded-sm bg-blue-100" />
+                ))}
+                <div className="h-px w-full bg-ink-200" />
+                {[0, 1].map((r) => (
+                  <div key={r} className="h-1.5 rounded-sm bg-purple-100" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    case 'diversity-atlas':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <svg viewBox="0 0 200 110" className="h-full w-full">
+            <rect x="10" y="10" width="90" height="42" fill="#F5EEFF" opacity="0.6" />
+            <rect x="100" y="10" width="90" height="42" fill="#EEF3FF" opacity="0.6" />
+            <line x1="10" y1="52" x2="190" y2="52" stroke="#C8CCDE" strokeDasharray="3 3" />
+            <line x1="100" y1="10" x2="100" y2="95" stroke="#C8CCDE" strokeDasharray="3 3" />
+            {[
+              { x: 45, y: 28, fill: '#7D3EE0' },
+              { x: 65, y: 38, fill: '#7D3EE0' },
+              { x: 130, y: 25, fill: '#3B68F4' },
+              { x: 150, y: 35, fill: '#3B68F4' },
+              { x: 160, y: 75, fill: '#3B68F4' },
+              { x: 40, y: 80, fill: '#9096B8' },
+            ].map((d, i) => (
+              <circle key={i} cx={d.x} cy={d.y} r={6} fill={d.fill} fillOpacity={0.7} stroke="white" strokeWidth="1.5" />
+            ))}
+          </svg>
+        </div>
+      )
+    case 'rank-provenance-timeline':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <svg viewBox="0 0 200 110" className="h-full w-full">
+            <line x1="10" y1="95" x2="190" y2="95" stroke="#DDE1EF" />
+            {[60, 110, 160].map((x) => (
+              <line key={x} x1={x} y1="20" x2={x} y2="95" stroke="#D6B8FF" strokeDasharray="3 3" />
+            ))}
+            <path
+              d="M 10 75 C 35 65, 50 50, 60 45 C 85 35, 110 30, 135 28 C 165 26, 180 22, 190 22"
+              fill="none"
+              stroke="url(#g-rpt-p)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <defs>
+              <linearGradient id="g-rpt-p" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" stopColor="#7D3EE0" />
+                <stop offset="100%" stopColor="#3B68F4" />
+              </linearGradient>
+            </defs>
+            <circle cx="190" cy="22" r="4" fill="#11132A" stroke="white" strokeWidth="1.5" />
+          </svg>
+        </div>
+      )
+    case 'decision-pathway':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <div className="flex h-full flex-col gap-2 justify-center">
+            {[0, 1, 2].map((i) => {
+              const tone = i === 0 ? 'blue' : i === 1 ? 'blue' : 'purple'
+              return (
+                <div
+                  key={i}
+                  className={cx(
+                    'flex items-center gap-2 rounded-lg border px-2 py-1.5',
+                    tone === 'blue' ? 'border-blue-200 bg-blue-50/40' : 'border-purple-200 bg-purple-50/40',
+                  )}
+                >
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-white font-mono text-[8px] font-semibold text-ink-700">
+                    {i + 1}
+                  </span>
+                  <div className={cx('h-1.5 w-8 rounded-full', tone === 'blue' ? 'bg-blue-500' : 'bg-purple-500')} />
+                  <div className="h-1 flex-1 rounded-full bg-ink-200" />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )
+    case 'rule-preview':
+      return (
+        <div className={cx(common, 'p-4')}>
+          <div className="grid h-full grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1 rounded border border-ink-200 bg-white p-2">
+              <div className="text-[8px] font-semibold uppercase text-ink-500">Today</div>
+              {[0, 1, 2, 3].map((r) => (
+                <div key={r} className="flex items-center gap-1">
+                  <span className="grid h-3 w-3 place-items-center rounded bg-ink-900 text-[7px] text-white">
+                    {r + 1}
+                  </span>
+                  <div className="h-1 flex-1 rounded-full bg-ink-200" />
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col gap-1 rounded border border-purple-400 bg-purple-50/40 p-2">
+              <div className="text-[8px] font-semibold uppercase text-purple-700">With rule</div>
+              {[0, 1, 2, 3].map((r) => {
+                const isTarget = r === 0
+                return (
+                  <div key={r} className="flex items-center gap-1">
+                    <span
+                      className={cx(
+                        'grid h-3 w-3 place-items-center rounded text-[7px] text-white',
+                        isTarget ? 'bg-purple-500' : 'bg-ink-900',
+                      )}
+                    >
+                      {r + 1}
+                    </span>
+                    <div
+                      className={cx(
+                        'h-1 flex-1 rounded-full',
+                        isTarget ? 'bg-purple-300' : 'bg-ink-200',
+                      )}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )
     default:
       return <div className={common} />
   }

@@ -1,5 +1,5 @@
 /**
- * Registry of the 18 concept directions. The detail view reads from this to
+ * Registry of the 28 concept directions. The detail view reads from this to
  * render metadata consistently and to wire up each concept's React component.
  */
 
@@ -23,6 +23,16 @@ import CommercialIntentCheck from '@/components/concepts/15-BirdsEyeLens'
 import FactorImpactMap from '@/components/concepts/16-FactorImpactMap'
 import ScorecardV2 from '@/components/concepts/17-ScorecardV2'
 import ScorecardV3 from '@/components/concepts/18-ScorecardV3'
+import TippingPointDiagnostic from '@/components/concepts/19-TippingPoint'
+import BuildUpStoryboard from '@/components/concepts/20-BuildUpStoryboard'
+import BaselineSwapMap from '@/components/concepts/21-BaselineSwapMap'
+import AlternativeScenarios from '@/components/concepts/22-AlternativeScenarios'
+import StabilityMap from '@/components/concepts/23-StabilityMap'
+import FactorWinnersLosers from '@/components/concepts/24-FactorWinnersLosers'
+import DiversityAtlas from '@/components/concepts/25-DiversityAtlas'
+import RankProvenanceTimeline from '@/components/concepts/26-RankProvenanceTimeline'
+import DecisionPathway from '@/components/concepts/27-DecisionPathway'
+import RulePreview from '@/components/concepts/28-RulePreview'
 
 export type Approach = 'ris' | 'pairwise' | 'both'
 export type Posture = 'enterprise' | 'bold'
@@ -314,6 +324,156 @@ export const concepts: ConceptMeta[] = [
       'Rule effects are described qualitatively — we do not claim an exact rule-only counterfactual rank. For pin rules, the pinned target position is stated verbatim because that is what the rule explicitly does; for boost/demote rules, the effect is directional. Rule copy is synthetic for this prototype.',
     group: 'approach-1',
     Component: ScorecardV3,
+  },
+  {
+    id: 'tipping-point',
+    number: 19,
+    title: 'Tipping Point Diagnostic',
+    tagline: 'Which products on this page are deeply anchored, and which are one factor shift away from swapping?',
+    approach: 'ris',
+    posture: 'enterprise',
+    question: 'Which products are volatile on this page — and which are rock-solid?',
+    description:
+      'A page-wide scan that labels each product as anchored, mid-sensitive, or on-the-edge. For every on-edge product, the view names the nearest rival and the factor whose small shift would flip the two. Helps the merchandiser know which products to watch carefully before they look, and which to trust at a glance.',
+    notClaimed:
+      'Stability here is a proxy built from each product\'s rank-with / rank-without data — not a prediction of future rank movement and not a statement about the live model.',
+    group: 'approach-1',
+    Component: TippingPointDiagnostic,
+  },
+  {
+    id: 'build-up-storyboard',
+    number: 20,
+    title: 'Ranking Build-Up Storyboard',
+    tagline: 'Four panels: Popularity only → + Freshness → + Trendiness → full ranking.',
+    approach: 'ris',
+    posture: 'bold',
+    question: 'What does each factor change when it enters the picture on this page?',
+    description:
+      'Reads the Sofas page left to right. Panel 0 shows the top five under Popularity alone; each subsequent panel adds one more factor and highlights which products swap in or out. Designed to make the factors\' roles legible as a narrative of accumulation, not as a decomposition — the build-up order is a storytelling choice the UI calls out explicitly.',
+    notClaimed:
+      'The model combines the four factors jointly, not sequentially. Adding factors in a different order would produce a different build-up. The panels are directionally faithful; they are not a unique attribution of the final rank.',
+    group: 'approach-1',
+    Component: BuildUpStoryboard,
+  },
+  {
+    id: 'baseline-swap-map',
+    number: 21,
+    title: 'Baseline-Relative Swap Map',
+    tagline: 'For each factor, the products it is currently lifting and the products it is holding back against the rest.',
+    approach: 'ris',
+    posture: 'enterprise',
+    question: 'What is each factor currently doing on this page, compared to the other three?',
+    description:
+      'Pick a factor. The view lists the products this factor is lifting on this page and the products whose competitors this factor is currently benefiting more. Read it as a baseline-relative diagnostic: "compared to a view where this factor didn\'t exist, here\'s who moves."',
+    notClaimed:
+      'A baseline-relative read, not a claim about how the four factors combine. A product not listed is broadly unaffected by the selected factor here — not a universal property.',
+    group: 'approach-1',
+    Component: BaselineSwapMap,
+  },
+  {
+    id: 'alternative-scenarios',
+    number: 22,
+    title: 'Alternative Scenarios Gallery',
+    tagline: 'Pre-computed "what if the factor mix were different" previews — no sliders, no live dial.',
+    approach: 'ris',
+    posture: 'bold',
+    question: 'What would this page look like under a different balance of factors?',
+    description:
+      'A gallery of pre-computed scenarios: "If Trendiness carried less influence", "If Freshness were dominant", and so on. Each scenario shows a top-ten preview and a short narrative explaining who rises and who falls. Read-only by design — changing the live ranking still happens through merchandising rules.',
+    notClaimed:
+      'Scenarios are diagnostic projections grounded in the per-factor rank counterfactuals, not live simulations of the model. There is no dial that controls the served page.',
+    group: 'approach-1',
+    Component: AlternativeScenarios,
+  },
+  {
+    id: 'stability-map',
+    number: 23,
+    title: 'Ranking Stability Map',
+    tagline: 'A 2D scan of rank versus how much the four factors move each product.',
+    approach: 'ris',
+    posture: 'bold',
+    question: 'Which products are where they are because of many factors, and which by just one?',
+    description:
+      'Every product placed on a 2D map: rank on the horizontal axis, total factor-driven sensitivity on the vertical. Colour names the dominant factor currently doing the most work for or against each product. Tells a merchandiser where to look first on a page without naming specific products upfront.',
+    notClaimed:
+      'Sensitivity is a proxy summing each product\'s rank shifts under single-factor ablation. It is a scan-level diagnostic, not a prediction and not a literal property of the model.',
+    group: 'approach-1',
+    Component: StabilityMap,
+  },
+  {
+    id: 'winners-losers',
+    number: 24,
+    title: 'Factor Winners & Losers',
+    tagline: 'Four columns, one per factor. Who each factor is working hardest for — and against — right now.',
+    approach: 'ris',
+    posture: 'enterprise',
+    question: 'Who is each factor currently working for on this page?',
+    description:
+      'A scannable board with one column per factor. In each: the top three products this factor is lifting, and the top three where this factor is lifting competitors more. Makes "what is each factor actually doing on this page" legible in one glance.',
+    notClaimed:
+      'Top three is a per-page observation, not a persistent property of the product. The same product ranked top-three here can fall outside it on a different PLP.',
+    group: 'approach-1',
+    Component: FactorWinnersLosers,
+  },
+  {
+    id: 'diversity-atlas',
+    number: 25,
+    title: 'Page Diversity Atlas',
+    tagline: 'Products positioned by the shape of their factor profile — find the outliers at a glance.',
+    approach: 'ris',
+    posture: 'bold',
+    question: 'Which products behave alike on this page, and which are the outliers?',
+    description:
+      'A 2D atlas of the Sofas PLP. Horizontal axis separates Popularity-led products from products driven by other forces; vertical axis separates momentum-led (Trendiness + Freshness) from conversion-led (Engagement). Products near each other share a factor profile; outliers are worth a closer look.',
+    notClaimed:
+      'The two axes are a linear projection of the per-factor rank impact — readable, but not a PCA or a persistent taxonomy. Clusters are observations on this page only.',
+    group: 'approach-1',
+    Component: DiversityAtlas,
+  },
+  {
+    id: 'rank-provenance-timeline',
+    number: 26,
+    title: 'Rank Provenance Timeline',
+    tagline: 'Four weeks of rank with a retraining marker — and a factor called out for each period.',
+    approach: 'ris',
+    posture: 'bold',
+    question: 'How has this product\'s rank moved over time, and what factor best accounts for each shift?',
+    description:
+      'A daily rank history for a selected product, with vertical markers at each model retraining. Each training period gets one annotation naming the factor whose behaviour best accounts for that week\'s trajectory — a single-factor best-fit, not a unique decomposition.',
+    notClaimed:
+      'Per-period factor attribution is the best single-factor fit for that period\'s shift. It is not the only possible explanation and is regenerated at every retraining. Historical data in the prototype is illustrative.',
+    group: 'approach-1',
+    Component: RankProvenanceTimeline,
+  },
+  {
+    id: 'decision-pathway',
+    number: 27,
+    title: 'Decision Pathway',
+    tagline: 'The pairwise reasoning behind the narrative, one factor at a time.',
+    approach: 'pairwise',
+    posture: 'bold',
+    question: 'Can I inspect the factor-by-factor reasoning that leads to A being ranked above B?',
+    description:
+      'An inspectable tree for any pair of products. Factors are evaluated in order of impact; at each step the view names which product the factor favours, how much the gap shifts because of it, and a one-line plain-language explanation. The leaf is the conclusion the narrative delivers in prose.',
+    notClaimed:
+      'The order in which factors are evaluated is the narrative\'s ordering (by materiality on this pair), not the model\'s — the model weighs all factors jointly.',
+    group: 'approach-2',
+    Component: DecisionPathway,
+  },
+  {
+    id: 'rule-preview',
+    number: 28,
+    title: 'Rule Preview',
+    tagline: 'Draft a rule, see the preview page next to today\'s — model unchanged, rule composed on top.',
+    approach: 'both',
+    posture: 'enterprise',
+    question: 'If I added this rule, what would the page look like — and would the model\'s story still hold?',
+    description:
+      'The merchandiser drafts a boost, demote or pin rule and sees today\'s page alongside the page they would get with the rule applied. Every shifted product is called out. The model\'s factor story for every product stays exactly the same — the rule composes on top of the served ranking, it does not dial the model.',
+    notClaimed:
+      'The preview is a composition of the current served ranking with the drafted rule. Conflict resolution between overlapping rules is simplified here; in production the system applies the most specific rule at serve time.',
+    group: 'hybrid',
+    Component: RulePreview,
   },
 ]
 
