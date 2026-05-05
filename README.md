@@ -8,6 +8,7 @@ A desktop-first design exploration that presents **16 UI directions** for explai
 The prototype is a stakeholder-facing artefact, not a product direction. It exists so product, design, ML, and merchandising can react to concrete surfaces before any production decisions are made.
 
 Live app — run locally with `npm install && npm run dev` (Vite, port 5173).
+Live github page : https://fmartineau-coveo.github.io/RankingDiscoveryOutcome/
 
 ---
 
